@@ -3,11 +3,27 @@ package blockjumper
 import org.scalajs.dom
 import scala.concurrent.duration.*
 
-case class GameState(soldier: Soldier):
-  def update(timeElapsed: Duration, keyState: KeyState): GameState = GameState(
-    soldier.update(timeElapsed, keyState)
-  )
-  def draw(context: dom.CanvasRenderingContext2D): Unit = soldier.draw(context)
+case class GameState(soldier: Soldier, blocks: List[Block]):
+  def update(
+      totalGameTimeSeconds: Double,
+      timeElapsedSinceLastFrame: Duration,
+      keyState: KeyState,
+      rng: util.Random
+  ): GameState =
+    val maybeNewBlock: Option[Block] =
+      if rng.nextDouble < Block.spawnRate(
+          totalGameTimeSeconds
+        ) * timeElapsedSinceLastFrame.toUnit(SECONDS)
+      then Some(Block.generateRandom(rng, None))
+      else None
+    val newBlocks = (maybeNewBlock.toList ++ blocks).take(20)
+    GameState(
+      soldier.update(timeElapsedSinceLastFrame, keyState),
+      newBlocks.map(_.update(timeElapsedSinceLastFrame))
+    )
+  def draw(context: dom.CanvasRenderingContext2D): Unit =
+    blocks.foreach(_.draw(context))
+    soldier.draw(context)
 
 object GameState:
   val ScreenWidth = 800
@@ -18,7 +34,7 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
   def update(timeElapsed: Duration, keyState: KeyState): Soldier =
     val floor = GameState.GrassHeight - Soldier.Height
     val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
-    val newX = (keyState.getLeftDown, keyState.getRightDown) match
+    val newX = (keyState.getLeftDown(), keyState.getRightDown()) match
       case (true, false) =>
         x - Soldier.WalkingSpeed * timeElapsed.toUnit(SECONDS)
       case (false, true) =>
@@ -27,10 +43,10 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
     Soldier(
       newX,
       newY,
-      if newY == floor then {
-        if keyState.getUpDown then -Soldier.JumpVelocity
+      if newY == floor then
+        if keyState.getUpDown() then -Soldier.JumpVelocity
         else 0
-      } else yVelocity + Soldier.Gravity * timeElapsed.toUnit(SECONDS)
+      else yVelocity + Soldier.Gravity * timeElapsed.toUnit(SECONDS)
     )
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
@@ -53,7 +69,56 @@ object Soldier:
     dom.document.createElement("img").asInstanceOf[dom.HTMLImageElement]
   image.src = "./soldier.png"
 
+enum LeftOrRight:
+  case Left, Right
+  def flip = this match
+    case Left  => Right
+    case Right => Left
+
+case class Block(
+    x: Double,
+    width: Int,
+    height: Int,
+    movingDirection: LeftOrRight
+):
+  private def y: Int = GameState.GrassHeight - height
+  private def area: Int = width * height
+  private def velocity: Double =
+    700 - 0.09375 * area // simplified form of original code, multiplied by 50
+  private def color: String =
+    if area < 2849 then "EEEE00"
+    else if area < 4444 then "#FF1818"
+    else "#0000E6"
+  def update(timeElapsed: Duration): Block =
+    val directionInt = movingDirection match
+      case LeftOrRight.Left  => -1
+      case LeftOrRight.Right => 1
+    Block(
+      x + directionInt * velocity * timeElapsed.toUnit(SECONDS),
+      width,
+      height,
+      movingDirection
+    )
+  def draw(context: dom.CanvasRenderingContext2D): Unit =
+    context.fillStyle = color
+    context.fillRect(x, y, width, height)
+
+object Block:
+  def spawnRate(totalGameTimeElapsedSeconds: Double) =
+    2.0 / 3.0 // TODO: use time elapsed
+  def generateRandom(rng: util.Random, spawnSide: Option[LeftOrRight]): Block =
+    val width = (rng.nextDouble() * 40).toInt + 41
+    val height = (rng.nextDouble() * 40).toInt + 41
+    val startLeftOrRight: LeftOrRight = spawnSide.getOrElse(
+      if rng.nextBoolean() then LeftOrRight.Left else LeftOrRight.Right
+    )
+    val initialX = startLeftOrRight match
+      case LeftOrRight.Left  => 0 - width
+      case LeftOrRight.Right => GameState.ScreenWidth + width
+    Block(initialX, width, height, startLeftOrRight.flip)
+
 def animate(
+    rng: util.Random,
     context: dom.CanvasRenderingContext2D,
     previousFrameTimestamp: Option[Double],
     gameState: GameState,
@@ -82,9 +147,10 @@ def animate(
   gameState.draw(context)
   dom.window.requestAnimationFrame(
     animate(
+      rng,
       context,
       Some(msTimestamp),
-      gameState.update(timeElapsed, keyState),
+      gameState.update(msTimestamp, timeElapsed, keyState, rng),
       keyState
     )
   )
@@ -95,9 +161,9 @@ class KeyState(
     private var rightDown: Boolean,
     private var upDown: Boolean
 ):
-  def getLeftDown = leftDown
-  def getRightDown = rightDown
-  def getUpDown = upDown
+  def getLeftDown() = leftDown
+  def getRightDown() = rightDown
+  def getUpDown() = upDown
   def processKeyEvent(e: dom.KeyboardEvent, pressedDown: Boolean): Unit =
     e.keyCode match
       case 37 => leftDown = pressedDown
@@ -106,6 +172,7 @@ class KeyState(
       case _  => ()
 
 @main def main(): Unit =
+  val rng = util.Random()
   val context: dom.CanvasRenderingContext2D = dom.document
     .querySelector("canvas")
     .asInstanceOf[dom.html.Canvas]
@@ -119,10 +186,14 @@ class KeyState(
   dom.window.addEventListener("keyup", e => keyState.processKeyEvent(e, false))
   dom.window.requestAnimationFrame(
     animate(
+      rng,
       context,
       None,
       // TODO: maybe align based on the center hit line
-      GameState(Soldier(GameState.ScreenWidth / 2 - Soldier.Width / 2, 0, 0)),
+      GameState(
+        Soldier(GameState.ScreenWidth / 2 - Soldier.Width / 2, 0, 0),
+        List.empty
+      ),
       keyState
     )
   )
