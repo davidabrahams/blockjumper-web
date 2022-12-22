@@ -1,8 +1,5 @@
 const context = document.querySelector("canvas").getContext("2d");
 
-context.canvas.height = 400;
-context.canvas.width = 1220;
-
 // Start the frame count at 1
 let frameCount = 1;
 // Set the number of obstacles to match the current "level"
@@ -111,7 +108,7 @@ const loop = function () {
   }
   // Creates the backdrop for each frame
   context.fillStyle = "#201A23";
-  context.fillRect(0, 0, 1220, 400); // x, y, width, height
+  context.fillRect(0, 0, 1170, 900); // x, y, width, height
 
 
   // Creates and fills the cube for each frame
