@@ -16,13 +16,13 @@ case class GameState(soldier: Soldier, blocks: List[Block]):
         ) * timeElapsedSinceLastFrame.toUnit(SECONDS)
       then Some(Block.generateRandom(rng, None))
       else None
-    val newBlocks = (maybeNewBlock.toList ++ blocks).take(20)
+    val newBlocks = (maybeNewBlock.toList ++ blocks).filterNot(_.isOffScreen)
     GameState(
       soldier.update(timeElapsedSinceLastFrame, keyState),
       newBlocks.map(_.update(timeElapsedSinceLastFrame))
     )
   def draw(context: dom.CanvasRenderingContext2D): Unit =
-    blocks.foreach(_.draw(context))
+    Block.drawBlocks(blocks, context)
     soldier.draw(context)
 
 object GameState:
@@ -81,11 +81,12 @@ case class Block(
     height: Int,
     movingDirection: LeftOrRight
 ):
-  private def y: Int = GameState.GrassHeight - height
+  def y: Int = GameState.GrassHeight - height
   private def area: Int = width * height
   private def velocity: Double =
     700 - 0.09375 * area // simplified form of original code, multiplied by 50
-  private def color: String =
+  def isOffScreen = (x + width < 0) || (x > GameState.ScreenWidth + width)
+  def color: String =
     if area < 2849 then "EEEE00"
     else if area < 4444 then "#FF1818"
     else "#0000E6"
@@ -99,9 +100,6 @@ case class Block(
       height,
       movingDirection
     )
-  def draw(context: dom.CanvasRenderingContext2D): Unit =
-    context.fillStyle = color
-    context.fillRect(x, y, width, height)
 
 object Block:
   def spawnRate(totalGameTimeElapsedSeconds: Double) =
@@ -116,6 +114,16 @@ object Block:
       case LeftOrRight.Left  => 0 - width
       case LeftOrRight.Right => GameState.ScreenWidth + width
     Block(initialX, width, height, startLeftOrRight.flip)
+  def drawBlocks(
+      blocks: List[Block],
+      context: dom.CanvasRenderingContext2D
+  ): Unit =
+    blocks.groupBy(_.color).foreach { (color, coloredBlocks) =>
+      context.beginPath()
+      context.fillStyle = color
+      coloredBlocks.foreach(b => context.rect(b.x, b.y, b.width, b.height))
+      context.fill()
+    }
 
 def animate(
     rng: util.Random,
@@ -128,22 +136,26 @@ def animate(
     case None       => Duration.Zero
     case Some(prev) => Duration.fromNanos(1000000 * (msTimestamp - prev))
   assert(timeElapsed >= Duration.Zero)
+  context.beginPath()
   // draw the sky
   context.fillStyle = "#5FA6E7"
-  context.fillRect(
+  context.rect(
     0,
     0,
     GameState.ScreenWidth,
     GameState.GrassHeight
   ) // x, y, width, height
+  context.fill()
+  context.beginPath()
   // draw the grass
   context.fillStyle = "#3DB91F"
-  context.fillRect(
+  context.rect(
     0,
     GameState.GrassHeight,
     GameState.ScreenWidth,
     GameState.ScreenHeight - GameState.GrassHeight
   )
+  context.fill()
   gameState.draw(context)
   dom.window.requestAnimationFrame(
     animate(
