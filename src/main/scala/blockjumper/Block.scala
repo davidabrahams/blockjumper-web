@@ -15,7 +15,7 @@ case class Block(
     700 - 0.09375 * area // simplified form of original code, multiplied by 50
   def isOffScreen = (x + width < 0) || (x > GameState.ScreenWidth + width)
   def color: String =
-    if area < 2849 then "EEEE00"
+    if area < 2849 then "#EEEE00"
     else if area < 4444 then "#FF1818"
     else "#0000E6"
   def update(timeElapsed: Duration): Block =

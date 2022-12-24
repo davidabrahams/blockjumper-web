@@ -24,6 +24,7 @@ def animate(
     GameState.GrassHeight
   ) // x, y, width, height
   context.fill()
+  gameState.draw(context)
   // draw the grass
   context.beginPath()
   context.fillStyle = "#3DB91F"
@@ -34,7 +35,6 @@ def animate(
     GameState.ScreenHeight - GameState.GrassHeight
   )
   context.fill()
-  gameState.draw(context)
   if !gameState.isOver then
     dom.window.requestAnimationFrame(
       animate(
