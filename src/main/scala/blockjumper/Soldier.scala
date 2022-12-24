@@ -81,6 +81,10 @@ object Soldier:
   val JumpVelocity = 1400 // original code had 28. 1400 = 28 * 50
   val LeftEdge = 2 // the soldier's left hand in the image
   val RightEdge = 46 // the soldier's right hand in the image
+  // this is a sequence of points on the outline of the soldier image. The
+  // coordinates are in the original, unscaled image. We divide them by 4
+  // since we scale to 1/4 in this game, and then we flip over the center line
+  // of the soldier so we have points on both sides
   def powerUpHitEdge: List[(Int, Int)] =
     val leftSide = List(
       (96, 0),
