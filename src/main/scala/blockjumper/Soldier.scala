@@ -23,7 +23,7 @@ case class Soldier(
         case _ => 0
       ,
       regularJumpQueued =
-        regularJumpQueued || (yVelocity < 0 && keyState.getUpDown()),
+        regularJumpQueued || (yVelocity >= 0 && keyState.getUpDown()),
       superJumpQueued = superJumpQueued || (yVelocity < 0 && keyState
         .getSpaceDown() && superJumps > 0)
     )
@@ -32,7 +32,7 @@ case class Soldier(
     val floor = GameState.GrassHeight - Soldier.Height
     this.copy(
       yVelocity = if y == floor then 0 else yVelocity,
-      midSuperJump = if y == floor then false else midSuperJump
+      midSuperJump = if y == floor then false else midSuperJump,
     )
 
   def applyJumps: Soldier =
