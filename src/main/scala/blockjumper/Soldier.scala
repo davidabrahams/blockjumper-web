@@ -3,10 +3,15 @@ package blockjumper
 import org.scalajs.dom
 import scala.concurrent.duration.*
 
-case class Soldier(x: Double, y: Double, yVelocity: Double):
+case class Soldier(
+    x: Double,
+    y: Double,
+    yVelocity: Double,
+    superJumps: Int,
+    midSuperJump: Boolean
+):
   def update(timeElapsed: Duration, keyState: KeyState): Soldier =
     val floor = GameState.GrassHeight - Soldier.Height
-    val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
     val xAfterWalking = (keyState.getLeftDown(), keyState.getRightDown()) match
       case (true, false) =>
         x - Soldier.WalkingSpeed * timeElapsed.toUnit(SECONDS)
@@ -18,14 +23,27 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
       Math.max(xAfterWalking, -Soldier.LeftEdge),
       GameState.ScreenWidth - Soldier.RightEdge
     )
+    val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
+    val startNewSuperJump =
+      superJumps > 0 && newY == floor && keyState.getSpaceDown()
+    val accel =
+      if midSuperJump then Soldier.SuperJumpGravity else Soldier.Gravity
     Soldier(
       newX,
       newY,
       if newY == floor then
-        if keyState.getUpDown() then -Soldier.JumpVelocity
+        if startNewSuperJump then -Soldier.SuperJumpVelocity
+        else if keyState.getUpDown() then -Soldier.JumpVelocity
         else 0
-      else yVelocity + Soldier.Gravity * timeElapsed.toUnit(SECONDS)
+      else yVelocity + accel * timeElapsed.toUnit(SECONDS),
+      if startNewSuperJump then superJumps - 1 else superJumps,
+      midSuperJump && newY < floor || startNewSuperJump
     )
+
+  def collectPowerUps(powerUps: List[PowerUp]) =
+    this.copy(superJumps = superJumps + powerUps.count { p =>
+      p.info == PowerUpInfo.SuperJump && doesCollect(p)
+    })
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
     context.drawImage(
@@ -74,11 +92,14 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
 
 object Soldier:
   val Gravity = 5000 // original code had 2, running at 50 fps. 5000 = 2 * 50^2
+  val SuperJumpGravity =
+    1250 // original code had 0.5, running at 50 fps. 1250 = 0.5 * 50^2
   val HitLine = 24 // roughly the mid line of the soldier image
   val Width = 51
   val Height = 84
   val WalkingSpeed = 400 // original code had 8. 400 = 8 * 50
   val JumpVelocity = 1400 // original code had 28. 1400 = 28 * 50
+  val SuperJumpVelocity = 900 // original code had 18. 900 = 18 * 50
   val LeftEdge = 2 // the soldier's left hand in the image
   val RightEdge = 46 // the soldier's right hand in the image
   // this is a sequence of points on the outline of the soldier image. The
