@@ -12,7 +12,6 @@ case class Soldier(
 ):
   def update(timeElapsed: Duration, keyState: KeyState): Soldier =
     val floor = GameState.GrassHeight - Soldier.Height
-    val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
     val xAfterWalking = (keyState.getLeftDown(), keyState.getRightDown()) match
       case (true, false) =>
         x - Soldier.WalkingSpeed * timeElapsed.toUnit(SECONDS)
@@ -24,20 +23,21 @@ case class Soldier(
       Math.max(xAfterWalking, -Soldier.LeftEdge),
       GameState.ScreenWidth - Soldier.RightEdge
     )
+    val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
     val startNewSuperJump =
       superJumps > 0 && newY == floor && keyState.getSpaceDown()
-    val newMidSuperJump = midSuperJump && newY < floor || startNewSuperJump
-    val accel = if midSuperJump then Soldier.SuperJumpGravity else Soldier.Gravity
+    val accel =
+      if midSuperJump then Soldier.SuperJumpGravity else Soldier.Gravity
     Soldier(
       newX,
       newY,
       if newY == floor then
-        if newMidSuperJump then -Soldier.SuperJumpVelocity
+        if startNewSuperJump then -Soldier.SuperJumpVelocity
         else if keyState.getUpDown() then -Soldier.JumpVelocity
         else 0
       else yVelocity + accel * timeElapsed.toUnit(SECONDS),
       if startNewSuperJump then superJumps - 1 else superJumps,
-      newMidSuperJump
+      midSuperJump && newY < floor || startNewSuperJump
     )
 
   def collectPowerUps(powerUps: List[PowerUp]) =
