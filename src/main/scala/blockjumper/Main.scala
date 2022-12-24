@@ -68,8 +68,8 @@ class KeyState(
       case 37 => leftDown = pressedDown
       case 38 => upDown = pressedDown
       case 39 => rightDown = pressedDown
-      case 32  => spaceDown = pressedDown
-      case _ => ()
+      case 32 => spaceDown = pressedDown
+      case _  => ()
 
 @main def main(): Unit =
   val rng = util.Random()

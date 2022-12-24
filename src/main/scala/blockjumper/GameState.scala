@@ -22,7 +22,9 @@ case class GameState(
       then Some(Block.generateRandom(rng, soldier.getSpawnSide(keyState)))
       else None
     GameState(
-      soldier.collectPowerUps(powerUps).update(timeElapsedSinceLastFrame, keyState),
+      soldier
+        .collectPowerUps(powerUps)
+        .update(timeElapsedSinceLastFrame, keyState),
       (maybeNewBlock.toList ++ blocks)
         .filterNot(_.isOffScreen)
         .map(_.update(timeElapsedSinceLastFrame)),
