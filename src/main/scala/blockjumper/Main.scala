@@ -15,7 +15,7 @@ case class GameState(soldier: Soldier, blocks: List[Block]):
     ) * timeElapsedSinceLastFrame.toUnit(SECONDS)
     val maybeNewBlock: Option[Block] =
       if rng.nextDouble() < newBlockSpawnOdds
-      then Some(Block.generateRandom(rng, None))
+      then Some(Block.generateRandom(rng, soldier.getSpawnSide(keyState)))
       else None
     val newBlocks = maybeNewBlock.toList ++ blocks.filterNot(_.isOffScreen)
     GameState(
@@ -65,8 +65,9 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
       Soldier.Height
     )
 
+  private def hitPointX = x + Soldier.HitLine
+
   def isHit(block: Block): Boolean =
-    val hitPointX = x + Soldier.HitLine
     val hitPointY = y + Soldier.Height
     val xHit = hitPointX > block.x && hitPointX < block.x + block.width
     // the soldier's foot is roughly 18 pixels wide. Because we only check his
@@ -76,6 +77,19 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
     // hitPointY == block.y + block.height
     val yHit = hitPointY > block.y + 18 && hitPointY <= block.y + block.height
     xHit && yHit
+
+  def getSpawnSide(keyState: KeyState): Option[LeftOrRight] =
+    val leftHalf = hitPointX < GameState.ScreenWidth / 2
+    val rightHalf = !leftHalf
+    val leftThird = hitPointX < GameState.ScreenWidth / 3
+    val rightThird = hitPointX > 2 * GameState.ScreenWidth / 3
+    if leftThird then Some(LeftOrRight.Right)
+    else if rightThird then Some(LeftOrRight.Left)
+    else if leftHalf && keyState.getLeftDown() && !keyState.getRightDown() then
+      Some(LeftOrRight.Right)
+    else if rightHalf && !keyState.getLeftDown() && keyState.getRightDown() then
+      Some(LeftOrRight.Left)
+    else None
 
 object Soldier:
   val Gravity = 5000 // original code had 2, running at 50 fps. 5000 = 2 * 50^2
