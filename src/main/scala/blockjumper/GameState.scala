@@ -3,7 +3,11 @@ package blockjumper
 import org.scalajs.dom
 import scala.concurrent.duration.*
 
-case class GameState(soldier: Soldier, blocks: List[Block], powerUps: List[PowerUp]):
+case class GameState(
+    soldier: Soldier,
+    blocks: List[Block],
+    powerUps: List[PowerUp]
+):
   def update(
       totalGameTimeSeconds: Double,
       timeElapsedSinceLastFrame: Duration,
@@ -22,7 +26,9 @@ case class GameState(soldier: Soldier, blocks: List[Block], powerUps: List[Power
       (maybeNewBlock.toList ++ blocks)
         .map(_.update(timeElapsedSinceLastFrame))
         .filterNot(_.isOffScreen),
-      (PowerUp.spawnPowerUps(rng, timeElapsedSinceLastFrame) ++ powerUps).map(_.update(timeElapsedSinceLastFrame)).filterNot(_.isOffScreen)
+      (PowerUp.spawnPowerUps(rng, timeElapsedSinceLastFrame) ++ powerUps)
+        .map(_.update(timeElapsedSinceLastFrame))
+        .filterNot(_.isOffScreen)
     )
   def draw(context: dom.CanvasRenderingContext2D): Unit =
     Block.drawBlocks(blocks, context)
