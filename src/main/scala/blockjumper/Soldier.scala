@@ -6,10 +6,14 @@ import scala.concurrent.duration.*
 case class Soldier(
     x: Double,
     y: Double,
+    xVelocity: Double,
     yVelocity: Double,
     superJumps: Int,
-    midSuperJump: Boolean
+    midSuperJump: Boolean,
+    superJumpQueued: Boolean
 ):
+  def applyKeyPresses(keyState: KeyState): Soldier =
+    this
   def update(timeElapsed: Duration, keyState: KeyState): Soldier =
     val floor = GameState.GrassHeight - Soldier.Height
     val xAfterWalking = (keyState.getLeftDown(), keyState.getRightDown()) match
@@ -36,8 +40,10 @@ case class Soldier(
         else if keyState.getUpDown() then -Soldier.JumpVelocity
         else 0
       else yVelocity + accel * timeElapsed.toUnit(SECONDS),
+      ???,
       if startNewSuperJump then superJumps - 1 else superJumps,
-      midSuperJump && newY < floor || startNewSuperJump
+      midSuperJump && newY < floor || startNewSuperJump,
+      ???
     )
 
   def collectPowerUps(powerUps: List[PowerUp]) =

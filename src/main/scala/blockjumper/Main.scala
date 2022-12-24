@@ -90,7 +90,7 @@ class KeyState(
       context,
       None,
       GameState(
-        Soldier(GameState.ScreenWidth / 2 - Soldier.HitLine, 0, 0, 0, false),
+        Soldier(GameState.ScreenWidth / 2 - Soldier.HitLine, 0, 0, 0, 0, false, false),
         List.empty,
         List.empty
       ),
