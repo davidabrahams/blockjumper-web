@@ -24,6 +24,9 @@ case class GameState(
     GameState(
       soldier
         .collectPowerUps(powerUps)
+        .applyKeyPresses(keyState)
+        .completeJumps
+        .applyJumps
         .update(timeElapsedSinceLastFrame),
       (maybeNewBlock.toList ++ blocks)
         .filterNot(_.isOffScreen)

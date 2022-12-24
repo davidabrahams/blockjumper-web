@@ -20,16 +20,19 @@ case class Soldier(
           -Soldier.WalkingSpeed
         case (false, true) =>
           Soldier.WalkingSpeed
-        case _ => 0,
-      regularJumpQueued = regularJumpQueued || (yVelocity < 0 && keyState.getUpDown()),
-      superJumpQueued = superJumpQueued || (yVelocity < 0 && keyState.getSpaceDown() && superJumps > 0)
+        case _ => 0
+      ,
+      regularJumpQueued =
+        regularJumpQueued || (yVelocity < 0 && keyState.getUpDown()),
+      superJumpQueued = superJumpQueued || (yVelocity < 0 && keyState
+        .getSpaceDown() && superJumps > 0)
     )
 
   def completeJumps: Soldier =
     val floor = GameState.GrassHeight - Soldier.Height
     this.copy(
-      yVelocity = if (y == floor) 0 else yVelocity,
-      midSuperJump = if (y == floor) false else midSuperJump
+      yVelocity = if y == floor then 0 else yVelocity,
+      midSuperJump = if y == floor then false else midSuperJump
     )
 
   def applyJumps: Soldier =
@@ -37,10 +40,14 @@ case class Soldier(
     val startSuperJump = y == floor && superJumpQueued
     val startRegularJump = !startSuperJump && y == floor && regularJumpQueued
     this.copy(
-      yVelocity = if (startSuperJump) -Soldier.SuperJumpVelocity else if (startRegularJump) -Soldier.JumpVelocity else yVelocity,
-      superJumps = if (startSuperJump) superJumps - 1 else superJumps,
+      yVelocity =
+        if startSuperJump then -Soldier.SuperJumpVelocity
+        else if startRegularJump then -Soldier.JumpVelocity
+        else yVelocity,
+      superJumps = if startSuperJump then superJumps - 1 else superJumps,
       midSuperJump = midSuperJump || startSuperJump,
-      regularJumpQueued = regularJumpQueued && !startSuperJump && !startRegularJump,
+      regularJumpQueued =
+        regularJumpQueued && !startSuperJump && !startRegularJump,
       superJumpQueued = superJumpQueued && !startSuperJump
     )
 
@@ -52,7 +59,8 @@ case class Soldier(
       GameState.ScreenWidth - Soldier.RightEdge
     )
     val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
-    val accel = if midSuperJump then Soldier.SuperJumpGravity else Soldier.Gravity
+    val accel =
+      if midSuperJump then Soldier.SuperJumpGravity else Soldier.Gravity
     this.copy(
       x = newX,
       y = newY,
