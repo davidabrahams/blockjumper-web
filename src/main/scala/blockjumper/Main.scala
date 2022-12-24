@@ -10,13 +10,14 @@ case class GameState(soldier: Soldier, blocks: List[Block]):
       keyState: KeyState,
       rng: util.Random
   ): GameState =
+    val newBlockSpawnOdds = Block.spawnRate(
+      totalGameTimeSeconds
+    ) * timeElapsedSinceLastFrame.toUnit(SECONDS)
     val maybeNewBlock: Option[Block] =
-      if rng.nextDouble < Block.spawnRate(
-          totalGameTimeSeconds
-        ) * timeElapsedSinceLastFrame.toUnit(SECONDS)
+      if rng.nextDouble() < newBlockSpawnOdds
       then Some(Block.generateRandom(rng, None))
       else None
-    val newBlocks = (maybeNewBlock.toList ++ blocks).filterNot(_.isOffScreen)
+    val newBlocks = maybeNewBlock.toList ++ blocks.filterNot(_.isOffScreen)
     GameState(
       soldier.update(timeElapsedSinceLastFrame, keyState),
       newBlocks.map(_.update(timeElapsedSinceLastFrame))
@@ -24,6 +25,7 @@ case class GameState(soldier: Soldier, blocks: List[Block]):
   def draw(context: dom.CanvasRenderingContext2D): Unit =
     Block.drawBlocks(blocks, context)
     soldier.draw(context)
+  def isOver: Boolean = blocks.exists(block => soldier.isHit(block))
 
 object GameState:
   val ScreenWidth = 800
@@ -58,8 +60,19 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
       Soldier.Height
     )
 
+  def isHit(block: Block): Boolean =
+    val hitPointX = x + Soldier.HitLine
+    val hitPointY = y + Soldier.Height
+    val xHit = hitPointX > block.x && hitPointX < block.x + block.width
+    // the soldier's foot is roughly 18 pixels wide. Because we only check his
+    // center line for collision, we also give an 18 pixel buffer on the top
+    // of blocks to make it feel consistent
+    val yHit = hitPointY > block.y + 18 && hitPointY <= block.y + block.height
+    xHit && yHit
+
 object Soldier:
   val Gravity = 5000 // original code had 2, running at 50 fps. 5000 = 2 * 50^2
+  val HitLine = 24 // roughly the mid line of the soldier image
   val Width = 51
   val Height = 84
   val WalkingSpeed = 400 // original code had 8. 400 = 8 * 50
@@ -146,8 +159,8 @@ def animate(
     GameState.GrassHeight
   ) // x, y, width, height
   context.fill()
-  context.beginPath()
   // draw the grass
+  context.beginPath()
   context.fillStyle = "#3DB91F"
   context.rect(
     0,
@@ -157,15 +170,16 @@ def animate(
   )
   context.fill()
   gameState.draw(context)
-  dom.window.requestAnimationFrame(
-    animate(
-      rng,
-      context,
-      Some(msTimestamp),
-      gameState.update(msTimestamp, timeElapsed, keyState, rng),
-      keyState
+  if !gameState.isOver then
+    dom.window.requestAnimationFrame(
+      animate(
+        rng,
+        context,
+        Some(msTimestamp),
+        gameState.update(msTimestamp, timeElapsed, keyState, rng),
+        keyState
+      )
     )
-  )
 }
 
 class KeyState(
