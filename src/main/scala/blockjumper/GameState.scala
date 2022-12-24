@@ -22,14 +22,14 @@ case class GameState(
       then Some(Block.generateRandom(rng, soldier.getSpawnSide(keyState)))
       else None
     GameState(
-      soldier.update(timeElapsedSinceLastFrame, keyState),
+      soldier.collectPowerUps(powerUps).update(timeElapsedSinceLastFrame, keyState),
       (maybeNewBlock.toList ++ blocks)
-        .map(_.update(timeElapsedSinceLastFrame))
-        .filterNot(_.isOffScreen),
-      (PowerUp.spawnPowerUps(rng, timeElapsedSinceLastFrame) ++ powerUps)
-        .filterNot(soldier.doesCollect(_))
-        .map(_.update(timeElapsedSinceLastFrame))
         .filterNot(_.isOffScreen)
+        .map(_.update(timeElapsedSinceLastFrame)),
+      (PowerUp.spawnPowerUps(rng, timeElapsedSinceLastFrame) ++ powerUps)
+        .filterNot(soldier.doesCollect)
+        .filterNot(_.isOffScreen)
+        .map(_.update(timeElapsedSinceLastFrame))
     )
   def draw(context: dom.CanvasRenderingContext2D): Unit =
     Block.drawBlocks(blocks, context)

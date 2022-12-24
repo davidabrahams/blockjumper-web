@@ -3,7 +3,7 @@ package blockjumper
 import org.scalajs.dom
 import scala.concurrent.duration.*
 
-case class Soldier(x: Double, y: Double, yVelocity: Double):
+case class Soldier(x: Double, y: Double, yVelocity: Double, superJumps: Int, midSuperJump: Boolean):
   def update(timeElapsed: Duration, keyState: KeyState): Soldier =
     val floor = GameState.GrassHeight - Soldier.Height
     val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
@@ -24,8 +24,15 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
       if newY == floor then
         if keyState.getUpDown() then -Soldier.JumpVelocity
         else 0
-      else yVelocity + Soldier.Gravity * timeElapsed.toUnit(SECONDS)
+      else yVelocity + Soldier.Gravity * timeElapsed.toUnit(SECONDS),
+      superJumps,
+      midSuperJump
     )
+
+  def collectPowerUps(powerUps: List[PowerUp]) =
+    this.copy(superJumps = superJumps + powerUps.count { p =>
+      p.info == PowerUpInfo.SuperJump && doesCollect(p)
+    })
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
     context.drawImage(
