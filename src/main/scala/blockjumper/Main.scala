@@ -36,12 +36,17 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
   def update(timeElapsed: Duration, keyState: KeyState): Soldier =
     val floor = GameState.GrassHeight - Soldier.Height
     val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
-    val newX = (keyState.getLeftDown(), keyState.getRightDown()) match
+    val xAfterWalking = (keyState.getLeftDown(), keyState.getRightDown()) match
       case (true, false) =>
         x - Soldier.WalkingSpeed * timeElapsed.toUnit(SECONDS)
       case (false, true) =>
         x + Soldier.WalkingSpeed * timeElapsed.toUnit(SECONDS)
       case _ => x
+    // force the soldier to stay in bounds
+    val newX = Math.min(
+      Math.max(xAfterWalking, -Soldier.LeftEdge),
+      GameState.ScreenWidth - Soldier.RightEdge
+    )
     Soldier(
       newX,
       newY,
@@ -66,7 +71,9 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
     val xHit = hitPointX > block.x && hitPointX < block.x + block.width
     // the soldier's foot is roughly 18 pixels wide. Because we only check his
     // center line for collision, we also give an 18 pixel buffer on the top
-    // of blocks to make it feel consistent
+    // of blocks to make it feel consistent. The second check comparison has to
+    // be <= because when the soldier sits on the ground,
+    // hitPointY == block.y + block.height
     val yHit = hitPointY > block.y + 18 && hitPointY <= block.y + block.height
     xHit && yHit
 
@@ -77,6 +84,8 @@ object Soldier:
   val Height = 84
   val WalkingSpeed = 400 // original code had 8. 400 = 8 * 50
   val JumpVelocity = 1400 // original code had 28. 1400 = 28 * 50
+  val LeftEdge = 2 // the soldier's left hand in the image
+  val RightEdge = 46 // the soldier's right hand in the image
 
   val image =
     dom.document.createElement("img").asInstanceOf[dom.HTMLImageElement]
