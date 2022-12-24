@@ -10,40 +10,53 @@ case class Soldier(
     yVelocity: Double,
     superJumps: Int,
     midSuperJump: Boolean,
+    regularJumpQueued: Boolean,
     superJumpQueued: Boolean
 ):
   def applyKeyPresses(keyState: KeyState): Soldier =
-    this
-  def update(timeElapsed: Duration, keyState: KeyState): Soldier =
+    this.copy(
+      xVelocity = (keyState.getLeftDown(), keyState.getRightDown()) match
+        case (true, false) =>
+          -Soldier.WalkingSpeed
+        case (false, true) =>
+          Soldier.WalkingSpeed
+        case _ => 0,
+      regularJumpQueued = regularJumpQueued || (yVelocity < 0 && keyState.getUpDown()),
+      superJumpQueued = superJumpQueued || (yVelocity < 0 && keyState.getSpaceDown() && superJumps > 0)
+    )
+
+  def completeJumps: Soldier =
     val floor = GameState.GrassHeight - Soldier.Height
-    val xAfterWalking = (keyState.getLeftDown(), keyState.getRightDown()) match
-      case (true, false) =>
-        x - Soldier.WalkingSpeed * timeElapsed.toUnit(SECONDS)
-      case (false, true) =>
-        x + Soldier.WalkingSpeed * timeElapsed.toUnit(SECONDS)
-      case _ => x
+    this.copy(
+      yVelocity = if (y == floor) 0 else yVelocity,
+      midSuperJump = if (y == floor) false else midSuperJump
+    )
+
+  def applyJumps: Soldier =
+    val floor = GameState.GrassHeight - Soldier.Height
+    val startSuperJump = y == floor && superJumpQueued
+    val startRegularJump = !startSuperJump && y == floor && regularJumpQueued
+    this.copy(
+      yVelocity = if (startSuperJump) -Soldier.SuperJumpVelocity else if (startRegularJump) -Soldier.JumpVelocity else yVelocity,
+      superJumps = if (startSuperJump) superJumps - 1 else superJumps,
+      midSuperJump = midSuperJump || startSuperJump,
+      regularJumpQueued = regularJumpQueued && !startSuperJump && !startRegularJump,
+      superJumpQueued = superJumpQueued && !startSuperJump
+    )
+
+  def update(timeElapsed: Duration): Soldier =
+    val floor = GameState.GrassHeight - Soldier.Height
     // force the soldier to stay in bounds
     val newX = Math.min(
-      Math.max(xAfterWalking, -Soldier.LeftEdge),
+      Math.max(x + xVelocity * timeElapsed.toUnit(SECONDS), -Soldier.LeftEdge),
       GameState.ScreenWidth - Soldier.RightEdge
     )
     val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
-    val startNewSuperJump =
-      superJumps > 0 && newY == floor && keyState.getSpaceDown()
-    val accel =
-      if midSuperJump then Soldier.SuperJumpGravity else Soldier.Gravity
-    Soldier(
-      newX,
-      newY,
-      if newY == floor then
-        if startNewSuperJump then -Soldier.SuperJumpVelocity
-        else if keyState.getUpDown() then -Soldier.JumpVelocity
-        else 0
-      else yVelocity + accel * timeElapsed.toUnit(SECONDS),
-      ???,
-      if startNewSuperJump then superJumps - 1 else superJumps,
-      midSuperJump && newY < floor || startNewSuperJump,
-      ???
+    val accel = if midSuperJump then Soldier.SuperJumpGravity else Soldier.Gravity
+    this.copy(
+      x = newX,
+      y = newY,
+      yVelocity = yVelocity + accel * timeElapsed.toUnit(SECONDS)
     )
 
   def collectPowerUps(powerUps: List[PowerUp]) =
