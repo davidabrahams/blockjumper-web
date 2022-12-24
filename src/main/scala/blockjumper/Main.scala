@@ -78,6 +78,11 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
     val yHit = hitPointY > block.y + 18 && hitPointY <= block.y + block.height
     xHit && yHit
 
+  /**
+   * If the soldier is on either the left or right third, spawn on the other side.
+   * If the soldier is on the left half, but moving to the left, spawn on the right.
+   * If the soldier is on the right half, but moving to the right, spawn on the left
+   */
   def getSpawnSide(keyState: KeyState): Option[LeftOrRight] =
     val leftHalf = hitPointX < GameState.ScreenWidth / 2
     val rightHalf = !leftHalf
