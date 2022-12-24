@@ -3,6 +3,50 @@ package blockjumper
 import org.scalajs.dom
 import scala.concurrent.duration.*
 
+def animate(
+    rng: util.Random,
+    context: dom.CanvasRenderingContext2D,
+    previousFrameTimestamp: Option[Double],
+    gameState: GameState,
+    keyState: KeyState
+): Double => Unit = { (msTimestamp: Double) =>
+  val timeElapsed: Duration = previousFrameTimestamp match
+    case None       => Duration.Zero
+    case Some(prev) => Duration.fromNanos(1000000 * (msTimestamp - prev))
+  assert(timeElapsed >= Duration.Zero)
+  context.beginPath()
+  // draw the sky
+  context.fillStyle = "#5FA6E7"
+  context.rect(
+    0,
+    0,
+    GameState.ScreenWidth,
+    GameState.GrassHeight
+  ) // x, y, width, height
+  context.fill()
+  gameState.draw(context)
+  // draw the grass
+  context.beginPath()
+  context.fillStyle = "#3DB91F"
+  context.rect(
+    0,
+    GameState.GrassHeight,
+    GameState.ScreenWidth,
+    GameState.ScreenHeight - GameState.GrassHeight
+  )
+  context.fill()
+  if !gameState.isOver then
+    dom.window.requestAnimationFrame(
+      animate(
+        rng,
+        context,
+        Some(msTimestamp),
+        gameState.update(msTimestamp, timeElapsed, keyState, rng),
+        keyState
+      )
+    )
+}
+
 enum LeftOrRight:
   case Left, Right
   def flip = this match
@@ -35,16 +79,16 @@ class KeyState(
   canvas.width = GameState.ScreenWidth
   canvas.height = GameState.ScreenHeight
   val keyState = KeyState(false, false, false)
-  dom.window.addEventListener("keydown", e => keyState.processKeyEvent(e, true))
-  dom.window.addEventListener("keyup", e => keyState.processKeyEvent(e, false))
+  dom.window.addEventListener("keydown", keyState.processKeyEvent(_, true))
+  dom.window.addEventListener("keyup", keyState.processKeyEvent(_, false))
   dom.window.requestAnimationFrame(
     animate(
       rng,
       context,
       None,
-      // TODO: maybe align based on the center hit line
       GameState(
-        Soldier(GameState.ScreenWidth / 2 - Soldier.Width / 2, 0, 0),
+        Soldier(GameState.ScreenWidth / 2 - Soldier.HitLine, 0, 0),
+        List.empty,
         List.empty
       ),
       keyState

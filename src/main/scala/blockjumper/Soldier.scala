@@ -49,6 +49,11 @@ case class Soldier(x: Double, y: Double, yVelocity: Double):
     val yHit = hitPointY > block.y + 18 && hitPointY <= block.y + block.height
     xHit && yHit
 
+  def doesCollect(powerUp: PowerUp): Boolean =
+    Soldier.powerUpHitEdge.exists { (hitX, hitY) =>
+      powerUp.eclipse.contains(hitX + x, hitY + y)
+    }
+
   /** If the soldier is on either the left or right third, spawn on the other
     * side. If the soldier is on the left half, but moving to the left, spawn on
     * the right. If the soldier is on the right half, but moving to the right,
@@ -76,6 +81,25 @@ object Soldier:
   val JumpVelocity = 1400 // original code had 28. 1400 = 28 * 50
   val LeftEdge = 2 // the soldier's left hand in the image
   val RightEdge = 46 // the soldier's right hand in the image
+  // this is a sequence of points on the outline of the soldier image. The
+  // coordinates are in the original, unscaled image. We divide them by 4
+  // since we scale to 1/4 in this game, and then we flip over the center line
+  // of the soldier so we have points on both sides
+  def powerUpHitEdge: List[(Int, Int)] =
+    val leftSide = List(
+      (96, 0),
+      (61, 7),
+      (44, 37),
+      (21, 97),
+      (17, 152),
+      (8, 234),
+      (19, 309),
+      (24, 335),
+      (59, 335),
+      (96, 335)
+    ).map((x, y) => (x / 4, y / 4))
+    val flipped = leftSide.map((x, y) => ((HitLine - x) + HitLine, y))
+    leftSide ++ flipped
 
   val image =
     dom.document.createElement("img").asInstanceOf[dom.HTMLImageElement]

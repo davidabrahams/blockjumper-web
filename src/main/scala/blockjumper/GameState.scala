@@ -3,7 +3,11 @@ package blockjumper
 import org.scalajs.dom
 import scala.concurrent.duration.*
 
-case class GameState(soldier: Soldier, blocks: List[Block]):
+case class GameState(
+    soldier: Soldier,
+    blocks: List[Block],
+    powerUps: List[PowerUp]
+):
   def update(
       totalGameTimeSeconds: Double,
       timeElapsedSinceLastFrame: Duration,
@@ -17,13 +21,19 @@ case class GameState(soldier: Soldier, blocks: List[Block]):
       if rng.nextDouble() < newBlockSpawnOdds
       then Some(Block.generateRandom(rng, soldier.getSpawnSide(keyState)))
       else None
-    val newBlocks = maybeNewBlock.toList ++ blocks.filterNot(_.isOffScreen)
     GameState(
       soldier.update(timeElapsedSinceLastFrame, keyState),
-      newBlocks.map(_.update(timeElapsedSinceLastFrame))
+      (maybeNewBlock.toList ++ blocks)
+        .map(_.update(timeElapsedSinceLastFrame))
+        .filterNot(_.isOffScreen),
+      (PowerUp.spawnPowerUps(rng, timeElapsedSinceLastFrame) ++ powerUps)
+        .filterNot(soldier.doesCollect(_))
+        .map(_.update(timeElapsedSinceLastFrame))
+        .filterNot(_.isOffScreen)
     )
   def draw(context: dom.CanvasRenderingContext2D): Unit =
     Block.drawBlocks(blocks, context)
+    powerUps.foreach(_.draw(context))
     soldier.draw(context)
   def isOver: Boolean = blocks.exists(block => soldier.isHit(block))
 
