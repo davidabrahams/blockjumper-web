@@ -27,6 +27,7 @@ case class GameState(
         .map(_.update(timeElapsedSinceLastFrame))
         .filterNot(_.isOffScreen),
       (PowerUp.spawnPowerUps(rng, timeElapsedSinceLastFrame) ++ powerUps)
+        .filterNot(soldier.doesCollect(_))
         .map(_.update(timeElapsedSinceLastFrame))
         .filterNot(_.isOffScreen)
     )
