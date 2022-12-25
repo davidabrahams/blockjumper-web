@@ -98,7 +98,8 @@ class KeyState(
           0,
           false,
           false,
-          false
+          false,
+          0
         ),
         List.empty,
         List.empty

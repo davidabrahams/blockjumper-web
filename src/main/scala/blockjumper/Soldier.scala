@@ -11,7 +11,8 @@ case class Soldier(
     superJumps: Int,
     midSuperJump: Boolean,
     regularJumpQueued: Boolean,
-    superJumpQueued: Boolean
+    superJumpQueued: Boolean,
+    invincibilitySecondsRemaining: Double
 ):
   def applyKeyPresses(keyState: KeyState): Soldier =
     this.copy(
@@ -64,15 +65,55 @@ case class Soldier(
     this.copy(
       x = newX,
       y = newY,
-      yVelocity = yVelocity + accel * timeElapsed.toUnit(SECONDS)
+      yVelocity = yVelocity + accel * timeElapsed.toUnit(SECONDS),
+      invincibilitySecondsRemaining =
+        Math.max(0, invincibilitySecondsRemaining - timeElapsed.toUnit(SECONDS))
     )
 
+  private def collectPowerUp(
+      powerUp: PowerUp
+  ): Soldier =
+    powerUp.info match
+      case PowerUpInfo.SuperJump => this.copy(superJumps = superJumps + 1)
+      case PowerUpInfo.Invincibility =>
+        this.copy(invincibilitySecondsRemaining = 3)
+
   def collectPowerUps(powerUps: List[PowerUp]) =
-    this.copy(superJumps = superJumps + powerUps.count { p =>
-      p.info == PowerUpInfo.SuperJump && doesCollect(p)
-    })
+    powerUps.foldLeft(this) { (s, p) =>
+      if doesCollect(p) then s.collectPowerUp(p) else s
+    }
+
+  private def maybeDrawForceField(context: dom.CanvasRenderingContext2D): Unit =
+    val drawWindows: List[(Double, Double)] = List(
+      (0, 0.05),
+      (0.1, 0.15),
+      (0.2, 0.25),
+      (0.3, 0.35),
+      (0.4, 0.45),
+      (0.5, 0.6),
+      (0.7, 0.8),
+      (0.9, 1),
+      (1.1, 1.2),
+      (1.3, 1.4),
+      (1.5, 3)
+    )
+    if drawWindows.exists((lower, upper) =>
+        lower < invincibilitySecondsRemaining && upper >= invincibilitySecondsRemaining
+      )
+    then
+      context.beginPath()
+      context.arc(
+        x + Soldier.HitLine,
+        y + Soldier.Height / 2,
+        60,
+        0,
+        2 * math.Pi
+      )
+      context.fillStyle = "#23F6AA"
+      context.fill()
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
+    maybeDrawForceField(context)
     context.drawImage(
       Soldier.image,
       x,
@@ -92,7 +133,7 @@ case class Soldier(
     // be <= because when the soldier sits on the ground,
     // hitPointY == block.y + block.height
     val yHit = hitPointY > block.y + 18 && hitPointY <= block.y + block.height
-    xHit && yHit
+    xHit && yHit && invincibilitySecondsRemaining == 0
 
   def doesCollect(powerUp: PowerUp): Boolean =
     Soldier.powerUpHitEdge.exists { (hitX, hitY) =>

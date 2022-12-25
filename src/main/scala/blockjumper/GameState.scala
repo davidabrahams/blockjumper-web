@@ -40,6 +40,7 @@ case class GameState(
         .filterNot(_.isOffScreen)
         .map(_.update(timeElapsedSinceLastFrame))
     )
+
   def draw(context: dom.CanvasRenderingContext2D): Unit =
     Block.drawBlocks(blocks, context)
     powerUps.foreach(_.draw(context))
