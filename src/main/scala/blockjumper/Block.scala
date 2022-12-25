@@ -28,6 +28,10 @@ case class Block(
       height,
       movingDirection
     )
+  def explosionHitPoints: List[(Double, Double)] =
+    val xCoords: List[Double] = List.range(0, 5).map(i => x + i * width / 4)
+    val yCoords: List[Double] = List.range(0, 5).map(i => y + i * height / 4)
+    xCoords.flatMap(xc => yCoords.map(yc => (xc, yc)))
 
 object Block:
   def spawnRate(totalGameTimeElapsedSeconds: Double) =

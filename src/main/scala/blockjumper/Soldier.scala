@@ -13,7 +13,9 @@ case class Soldier(
     regularJumpQueued: Boolean,
     superJumpQueued: Boolean,
     invincibilitySecondsRemaining: Double,
-    bullets: Int
+    explosionSecondsRemaining: Double,
+    bullets: Int,
+    explosions: Int
 ):
   def applyKeyPresses(keyState: KeyState): Soldier =
     this.copy(
@@ -67,8 +69,10 @@ case class Soldier(
       x = newX,
       y = newY,
       yVelocity = yVelocity + accel * timeElapsed.toUnit(SECONDS),
-      invincibilitySecondsRemaining =
-        Math.max(0, invincibilitySecondsRemaining - timeElapsed.toUnit(SECONDS))
+      invincibilitySecondsRemaining = Math
+        .max(0, invincibilitySecondsRemaining - timeElapsed.toUnit(SECONDS)),
+      explosionSecondsRemaining =
+        Math.max(0, explosionSecondsRemaining - timeElapsed.toUnit(SECONDS))
     )
 
   private def collectPowerUp(
@@ -80,6 +84,8 @@ case class Soldier(
         this.copy(invincibilitySecondsRemaining = 3)
       case PowerUpInfo.Bullets =>
         this.copy(bullets = bullets + 5)
+      case PowerUpInfo.Explosion =>
+        this.copy(explosions = explosions + 1)
 
   def collectPowerUps(powerUps: List[PowerUp]) =
     powerUps.foldLeft(this) { (s, p) =>
@@ -106,8 +112,8 @@ case class Soldier(
     then
       context.beginPath()
       context.arc(
-        x + Soldier.HitLine,
-        y + Soldier.Height / 2,
+        hitPointX,
+        centerY,
         60,
         0,
         2 * math.Pi
@@ -115,7 +121,32 @@ case class Soldier(
       context.fillStyle = "rgba(35, 246, 170, 0.6)"
       context.fill()
 
+  private def maybeDrawExplosion(context: dom.CanvasRenderingContext2D): Unit =
+    val drawWindows: List[(Double, Double)] = List(
+      (0, 0.025),
+      (0.075, 0.1),
+      (0.15, 0.175),
+      (0.225, 0.25),
+      (0.3, 0.325),
+      (0.375, 0.4)
+    )
+    if drawWindows.exists { (lower, upper) =>
+        lower < explosionSecondsRemaining && upper >= explosionSecondsRemaining
+      }
+    then
+      context.beginPath()
+      context.arc(
+        hitPointX,
+        centerY,
+        Soldier.ExplosionRadius,
+        0,
+        2 * math.Pi
+      )
+      context.fillStyle = "rgba(244, 136, 58, 0.9)"
+      context.fill()
+
   def draw(context: dom.CanvasRenderingContext2D): Unit =
+    maybeDrawExplosion(context)
     maybeDrawForceField(context)
     context.drawImage(
       Soldier.image,
@@ -126,6 +157,7 @@ case class Soldier(
     )
 
   private def hitPointX = x + Soldier.HitLine
+  private def centerY = y + Soldier.Height / 2
 
   def isHit(block: Block): Boolean =
     val hitPointY = y + Soldier.Height
@@ -163,8 +195,19 @@ case class Soldier(
 
   def maybeSpawnBullet: Option[Bullet] =
     if bullets > 0 then
-      Some(Bullet(x + Soldier.HitLine, y + Soldier.Height - Bullet.Height))
+      Some(Bullet(hitPointX, y + Soldier.Height - Bullet.Height))
     else None
+
+  def explodedBlock(b: Block): Boolean =
+    if explosionSecondsRemaining > 0 then
+      val explosionEclipse = Eclipse(
+        hitPointX - Soldier.ExplosionRadius,
+        centerY - Soldier.ExplosionRadius,
+        2 * Soldier.ExplosionRadius,
+        2 * Soldier.ExplosionRadius
+      )
+      b.explosionHitPoints.exists((bX, bY) => explosionEclipse.contains(bX, bY))
+    else false
 
 object Soldier:
   // if the soldier is 100 or less pixels off the ground, pressing jump will
@@ -187,7 +230,9 @@ object Soldier:
   // since we scale to 1/4 in this game, and then we flip over the center line
   // of the soldier so we have points on both sides
 
-  // give that we are a certain distance off the ground, how long has our
+  val ExplosionRadius = 275
+
+  // given that we are a certain distance off the ground, how long has our
   // super jump been? This assumes we are still on the way up
   private def superJumpTimeElapsed(distanceTraveled: Double): Double =
     // solving a quadratic equation:
