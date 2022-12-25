@@ -24,24 +24,24 @@ case class Soldier(
       ,
       regularJumpQueued =
         regularJumpQueued || (yVelocity >= 0 && keyState.getUpDown()),
-      superJumpQueued = superJumpQueued || (yVelocity >= 0 && keyState
-        .getSpaceDown() && superJumps > 0)
+      superJumpQueued =
+        superJumpQueued || keyState.getSpaceDown() && superJumps > 0
     )
 
   def completeJumps: Soldier =
-    val floor = GameState.GrassHeight - Soldier.Height
     this.copy(
-      yVelocity = if y == floor then 0 else yVelocity,
-      midSuperJump = if y == floor then false else midSuperJump
+      yVelocity = if y == Soldier.Floor then 0 else yVelocity,
+      midSuperJump = midSuperJump && y != Soldier.Floor
     )
 
   def applyJumps: Soldier =
-    val floor = GameState.GrassHeight - Soldier.Height
-    val startSuperJump = y == floor && superJumpQueued
-    val startRegularJump = !startSuperJump && y == floor && regularJumpQueued
+    val startSuperJump = yVelocity <= 0 && superJumpQueued
+    println(s"Start super jump: $startSuperJump")
+    val startRegularJump =
+      !startSuperJump && y == Soldier.Floor && regularJumpQueued
     this.copy(
       yVelocity =
-        if startSuperJump then -Soldier.SuperJumpVelocity
+        if startSuperJump then -Soldier.superJumpVelocity(Soldier.Floor - y)
         else if startRegularJump then -Soldier.JumpVelocity
         else yVelocity,
       superJumps = if startSuperJump then superJumps - 1 else superJumps,
@@ -52,13 +52,13 @@ case class Soldier(
     )
 
   def update(timeElapsed: Duration): Soldier =
-    val floor = GameState.GrassHeight - Soldier.Height
     // force the soldier to stay in bounds
     val newX = Math.min(
       Math.max(x + xVelocity * timeElapsed.toUnit(SECONDS), -Soldier.LeftEdge),
       GameState.ScreenWidth - Soldier.RightEdge
     )
-    val newY = Math.min(floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
+    val newY =
+      Math.min(Soldier.Floor, y + yVelocity * timeElapsed.toUnit(SECONDS))
     val accel =
       if midSuperJump then Soldier.SuperJumpGravity else Soldier.Gravity
     this.copy(
@@ -124,6 +124,7 @@ object Soldier:
   val HitLine = 24 // roughly the mid line of the soldier image
   val Width = 51
   val Height = 84
+  val Floor = GameState.GrassHeight - Height
   val WalkingSpeed = 400 // original code had 8. 400 = 8 * 50
   val JumpVelocity = 1400 // original code had 28. 1400 = 28 * 50
   val SuperJumpVelocity = 900 // original code had 18. 900 = 18 * 50
@@ -133,6 +134,22 @@ object Soldier:
   // coordinates are in the original, unscaled image. We divide them by 4
   // since we scale to 1/4 in this game, and then we flip over the center line
   // of the soldier so we have points on both sides
+
+  // give that we are a certain distance off the ground, how long has our
+  // super jump been? This assumes we are still on the way up
+  private def superJumpTimeElapsed(distanceTraveled: Double): Double =
+    // solving a quadratic equation: 
+    // https://www.wolframalpha.com/input?i=y+%3D+v*t+-+0.5*a*t*t%2C+solve+for+t
+    val v = SuperJumpVelocity
+    val a = SuperJumpGravity
+    val y = distanceTraveled
+    (v - Math.sqrt(v * v - 2 * a * y)) / a
+
+  // given that we are a certain distance off the ground and we are mid
+  // superjump, what is our velocity?
+  def superJumpVelocity(distanceTraveled: Double): Double =
+    SuperJumpVelocity - SuperJumpGravity * superJumpTimeElapsed(distanceTraveled)
+
   def powerUpHitEdge: List[(Int, Int)] =
     val leftSide = List(
       (96, 0),
