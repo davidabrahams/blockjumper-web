@@ -24,7 +24,7 @@ case class Soldier(
       ,
       regularJumpQueued =
         regularJumpQueued || (yVelocity >= 0 && keyState.getUpDown()),
-      superJumpQueued = superJumpQueued || (yVelocity < 0 && keyState
+      superJumpQueued = superJumpQueued || (yVelocity >= 0 && keyState
         .getSpaceDown() && superJumps > 0)
     )
 
