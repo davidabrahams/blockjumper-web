@@ -17,9 +17,11 @@ enum PowerUpInfo(
     val fontColor: String
 ):
   // 7.5, .1333 is correct
-  case SuperJump extends PowerUpInfo("Super\nJump", "#E84023", 0, 1, 14, "#FFFFFF")
+  case SuperJump
+      extends PowerUpInfo("Super\nJump", "#E84023", 0, 1, 14, "#FFFFFF")
   // 15, .0667 is correct
-  case Invincibility extends PowerUpInfo("Invincibility", "#D2FBCE", 0, 1, 10, "#000000")
+  case Invincibility
+      extends PowerUpInfo("Invincibility", "#D2FBCE", 0, 1, 10, "#000000")
 
 case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
   def update(timeElapsed: Duration): PowerUp =
@@ -32,7 +34,14 @@ case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
     context.arc(centerX, centerY, PowerUp.Radius, 0, 2 * math.Pi)
     context.fillStyle = info.color
     context.fill()
-    PowerUp.fillText(context, info.text, centerX, centerY, info.fontSize, info.fontColor)
+    PowerUp.fillText(
+      context,
+      info.text,
+      centerX,
+      centerY,
+      info.fontSize,
+      info.fontColor
+    )
   def eclipse = Eclipse(
     centerX - PowerUp.Radius,
     centerY - PowerUp.Radius,
