@@ -24,7 +24,10 @@ case class GameState(
     GameState(
       soldier
         .collectPowerUps(powerUps)
-        .update(timeElapsedSinceLastFrame, keyState),
+        .completeJumps
+        .applyKeyPresses(keyState)
+        .applyJumps
+        .update(timeElapsedSinceLastFrame),
       (maybeNewBlock.toList ++ blocks)
         .filterNot(_.isOffScreen)
         .map(_.update(timeElapsedSinceLastFrame)),
