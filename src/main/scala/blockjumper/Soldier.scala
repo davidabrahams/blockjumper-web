@@ -69,8 +69,8 @@ case class Soldier(
       x = newX,
       y = newY,
       yVelocity = yVelocity + accel * timeElapsed.toUnit(SECONDS),
-      invincibilitySecondsRemaining =
-        Math.max(0, invincibilitySecondsRemaining - timeElapsed.toUnit(SECONDS)),
+      invincibilitySecondsRemaining = Math
+        .max(0, invincibilitySecondsRemaining - timeElapsed.toUnit(SECONDS)),
       explosionSecondsRemaining =
         Math.max(0, explosionSecondsRemaining - timeElapsed.toUnit(SECONDS))
     )
@@ -128,7 +128,7 @@ case class Soldier(
       (0.15, 0.175),
       (0.225, 0.25),
       (0.3, 0.325),
-      (0.375, 0.4),
+      (0.375, 0.4)
     )
     if drawWindows.exists { (lower, upper) =>
         lower < explosionSecondsRemaining && upper >= explosionSecondsRemaining
@@ -144,7 +144,6 @@ case class Soldier(
       )
       context.fillStyle = "rgba(244, 136, 58, 0.9)"
       context.fill()
-
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
     maybeDrawExplosion(context)
@@ -198,6 +197,17 @@ case class Soldier(
     if bullets > 0 then
       Some(Bullet(hitPointX, y + Soldier.Height - Bullet.Height))
     else None
+
+  def explodedBlock(b: Block): Boolean =
+    if explosionSecondsRemaining > 0 then
+      val explosionEclipse = Eclipse(
+        hitPointX - Soldier.ExplosionRadius,
+        centerY - Soldier.ExplosionRadius,
+        2 * Soldier.ExplosionRadius,
+        2 * Soldier.ExplosionRadius
+      )
+      b.explosionHitPoints.exists((bX, bY) => explosionEclipse.contains(bX, bY))
+    else false
 
 object Soldier:
   // if the soldier is 100 or less pixels off the ground, pressing jump will

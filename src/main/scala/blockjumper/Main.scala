@@ -81,7 +81,7 @@ class KeyState(
       case 32 => spaceDown = pressedDown
       case 88 => xClicked |= pressedDown
       case 90 => zClicked |= pressedDown
-      case x => ()
+      case x  => ()
 
 @main def main(): Unit =
   val rng = util.Random()

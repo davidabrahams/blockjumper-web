@@ -24,14 +24,15 @@ case class GameState(
       else None
     val maybeNewBullet: Option[Bullet] =
       if keyState.processXClick() then soldier.maybeSpawnBullet else None
-    // TODO: respect explosion count here
-    val doExplode = keyState.processZClick()
+    val doExplode = keyState.processZClick() && soldier.explosions > 0
     GameState(
       soldier
         .copy(
-          bullets = soldier.bullets - (if maybeNewBullet.isDefined then 1 else 0),
+          bullets =
+            soldier.bullets - (if maybeNewBullet.isDefined then 1 else 0),
           explosions = soldier.explosions - (if doExplode then 1 else 0),
-          explosionSecondsRemaining = if doExplode then 0.4 else soldier.explosionSecondsRemaining
+          explosionSecondsRemaining =
+            if doExplode then 0.4 else soldier.explosionSecondsRemaining
         )
         .collectPowerUps(powerUps)
         .completeJumps
@@ -39,6 +40,7 @@ case class GameState(
         .applyJumps
         .update(timeElapsedSinceLastFrame),
       (maybeNewBlock.toList ++ blocks)
+        .filterNot(soldier.explodedBlock)
         .filterNot(_.isOffScreen)
         .filterNot(block => bullets.exists(_.hit(block)))
         .map(_.update(timeElapsedSinceLastFrame)),
