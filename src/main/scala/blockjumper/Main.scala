@@ -57,19 +57,26 @@ class KeyState(
     private var leftDown: Boolean,
     private var rightDown: Boolean,
     private var upDown: Boolean,
-    private var spaceDown: Boolean
+    private var spaceDown: Boolean,
+    private var xClicked: Boolean
 ):
   def getLeftDown() = leftDown
   def getRightDown() = rightDown
   def getUpDown() = upDown
   def getSpaceDown() = spaceDown
+  def processXClick(): Boolean =
+    val current = xClicked
+    xClicked = false
+    current
   def processKeyEvent(e: dom.KeyboardEvent, pressedDown: Boolean): Unit =
     e.keyCode match
       case 37 => leftDown = pressedDown
       case 38 => upDown = pressedDown
       case 39 => rightDown = pressedDown
       case 32 => spaceDown = pressedDown
-      case _  => ()
+      case 88 =>
+        xClicked |= pressedDown
+      case x => ()
 
 @main def main(): Unit =
   val rng = util.Random()
@@ -81,7 +88,7 @@ class KeyState(
   val canvas: dom.HTMLCanvasElement = context.canvas
   canvas.width = GameState.ScreenWidth
   canvas.height = GameState.ScreenHeight
-  val keyState = KeyState(false, false, false, false)
+  val keyState = KeyState(false, false, false, false, false)
   dom.window.addEventListener("keydown", keyState.processKeyEvent(_, true))
   dom.window.addEventListener("keyup", keyState.processKeyEvent(_, false))
   dom.window.requestAnimationFrame(
@@ -99,8 +106,10 @@ class KeyState(
           false,
           false,
           false,
+          0,
           0
         ),
+        List.empty,
         List.empty,
         List.empty
       ),

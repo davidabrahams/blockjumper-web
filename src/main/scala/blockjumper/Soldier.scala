@@ -12,7 +12,8 @@ case class Soldier(
     midSuperJump: Boolean,
     regularJumpQueued: Boolean,
     superJumpQueued: Boolean,
-    invincibilitySecondsRemaining: Double
+    invincibilitySecondsRemaining: Double,
+    bullets: Int
 ):
   def applyKeyPresses(keyState: KeyState): Soldier =
     this.copy(
@@ -77,6 +78,8 @@ case class Soldier(
       case PowerUpInfo.SuperJump => this.copy(superJumps = superJumps + 1)
       case PowerUpInfo.Invincibility =>
         this.copy(invincibilitySecondsRemaining = 3)
+      case PowerUpInfo.Bullets =>
+        this.copy(bullets = bullets + 5)
 
   def collectPowerUps(powerUps: List[PowerUp]) =
     powerUps.foldLeft(this) { (s, p) =>
@@ -97,9 +100,9 @@ case class Soldier(
       (1.3, 1.4),
       (1.5, 3)
     )
-    if drawWindows.exists((lower, upper) =>
+    if drawWindows.exists { (lower, upper) =>
         lower < invincibilitySecondsRemaining && upper >= invincibilitySecondsRemaining
-      )
+      }
     then
       context.beginPath()
       context.arc(
@@ -109,7 +112,7 @@ case class Soldier(
         0,
         2 * math.Pi
       )
-      context.fillStyle = "#23F6AA"
+      context.fillStyle = "rgba(35, 246, 170, 0.6)"
       context.fill()
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
@@ -156,6 +159,11 @@ case class Soldier(
       Some(LeftOrRight.Right)
     else if rightHalf && !keyState.getLeftDown() && keyState.getRightDown() then
       Some(LeftOrRight.Left)
+    else None
+
+  def maybeSpawnBullet: Option[Bullet] =
+    if bullets > 0 then
+      Some(Bullet(x + Soldier.HitLine, y + Soldier.Height - Bullet.Height))
     else None
 
 object Soldier:
