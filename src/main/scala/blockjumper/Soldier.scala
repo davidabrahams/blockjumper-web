@@ -112,7 +112,7 @@ case class Soldier(
         0,
         2 * math.Pi
       )
-      context.fillStyle = "#23F6AA"
+      context.fillStyle = "rgba(35, 246, 170, 0.6)"
       context.fill()
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
@@ -161,9 +161,10 @@ case class Soldier(
       Some(LeftOrRight.Left)
     else None
 
-  def spawnBullet: Bullet =
-    println("SPAWNING BULLET")
-    Bullet(x + Soldier.HitLine, y + Soldier.Height - Bullet.Height)
+  def maybeSpawnBullet: Option[Bullet] =
+    if bullets > 0 then
+      Some(Bullet(x + Soldier.HitLine, y + Soldier.Height - Bullet.Height))
+    else None
 
 object Soldier:
   // if the soldier is 100 or less pixels off the ground, pressing jump will

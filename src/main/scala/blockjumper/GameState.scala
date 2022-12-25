@@ -23,9 +23,12 @@ case class GameState(
       then Some(Block.generateRandom(rng, soldier.getSpawnSide(keyState)))
       else None
     val maybeNewBullet: Option[Bullet] =
-      if keyState.processXClick() then Some(soldier.spawnBullet) else None
+      if keyState.processXClick() then soldier.maybeSpawnBullet else None
     GameState(
       soldier
+        .copy(bullets =
+          soldier.bullets - (if maybeNewBullet.isDefined then 1 else 0)
+        )
         .collectPowerUps(powerUps)
         .completeJumps
         .applyKeyPresses(keyState)
