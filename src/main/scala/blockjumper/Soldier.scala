@@ -23,7 +23,8 @@ case class Soldier(
         case _ => 0
       ,
       regularJumpQueued =
-        regularJumpQueued || (yVelocity >= 0 && keyState.getUpDown()),
+        regularJumpQueued || (yVelocity >= 0 && Soldier.Floor - y < Soldier.JumpQueueDistance && keyState
+          .getUpDown()),
       superJumpQueued =
         superJumpQueued || keyState.getSpaceDown() && superJumps > 0
     )
@@ -117,6 +118,9 @@ case class Soldier(
     else None
 
 object Soldier:
+  // if the soldier is 100 or less pixels off the ground, pressing jump will
+  // queue a jump
+  val JumpQueueDistance = 100
   val Gravity = 5000 // original code had 2, running at 50 fps. 5000 = 2 * 50^2
   val SuperJumpGravity =
     1250 // original code had 0.5, running at 50 fps. 1250 = 0.5 * 50^2
