@@ -112,6 +112,8 @@ class KeyState(
           false,
           false,
           0,
+          0,
+          0,
           0
         ),
         List.empty,

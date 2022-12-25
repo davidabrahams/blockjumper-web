@@ -24,10 +24,14 @@ case class GameState(
       else None
     val maybeNewBullet: Option[Bullet] =
       if keyState.processXClick() then soldier.maybeSpawnBullet else None
+    // TODO: respect explosion count here
+    val doExplode = keyState.processZClick()
     GameState(
       soldier
-        .copy(bullets =
-          soldier.bullets - (if maybeNewBullet.isDefined then 1 else 0)
+        .copy(
+          bullets = soldier.bullets - (if maybeNewBullet.isDefined then 1 else 0),
+          explosions = soldier.explosions - (if doExplode then 1 else 0),
+          explosionSecondsRemaining = if doExplode then 0.4 else soldier.explosionSecondsRemaining
         )
         .collectPowerUps(powerUps)
         .completeJumps
