@@ -22,6 +22,9 @@ enum PowerUpInfo(
   // 15, .0667 is correct
   case Invincibility
       extends PowerUpInfo("Invincibility", "#D2FBCE", 0, 1, 10, "#000000")
+  // 10, .0833 is correct
+  case Bullets
+      extends PowerUpInfo("+5\nBullets", "#8DA057", 0, 1, 14, "#000000")
 
 case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
   def update(timeElapsed: Duration): PowerUp =

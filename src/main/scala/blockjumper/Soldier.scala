@@ -12,7 +12,8 @@ case class Soldier(
     midSuperJump: Boolean,
     regularJumpQueued: Boolean,
     superJumpQueued: Boolean,
-    invincibilitySecondsRemaining: Double
+    invincibilitySecondsRemaining: Double,
+    bullets: Int
 ):
   def applyKeyPresses(keyState: KeyState): Soldier =
     this.copy(
@@ -77,6 +78,8 @@ case class Soldier(
       case PowerUpInfo.SuperJump => this.copy(superJumps = superJumps + 1)
       case PowerUpInfo.Invincibility =>
         this.copy(invincibilitySecondsRemaining = 3)
+      case PowerUpInfo.Bullets =>
+        this.copy(bullets = bullets + 5)
 
   def collectPowerUps(powerUps: List[PowerUp]) =
     powerUps.foldLeft(this) { (s, p) =>
@@ -98,8 +101,8 @@ case class Soldier(
       (1.5, 3)
     )
     if drawWindows.exists { (lower, upper) =>
-      lower < invincibilitySecondsRemaining && upper >= invincibilitySecondsRemaining
-    }
+        lower < invincibilitySecondsRemaining && upper >= invincibilitySecondsRemaining
+      }
     then
       context.beginPath()
       context.arc(
@@ -157,6 +160,10 @@ case class Soldier(
     else if rightHalf && !keyState.getLeftDown() && keyState.getRightDown() then
       Some(LeftOrRight.Left)
     else None
+
+  def spawnBullet: Bullet =
+    println("SPAWNING BULLET")
+    Bullet(x + Soldier.HitLine, y + Soldier.Height - Bullet.Height)
 
 object Soldier:
   // if the soldier is 100 or less pixels off the ground, pressing jump will
