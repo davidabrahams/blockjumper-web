@@ -31,7 +31,11 @@ case class GameState(
       (maybeNewBlock.toList ++ blocks)
         .filterNot(_.isOffScreen)
         .map(_.update(timeElapsedSinceLastFrame)),
-      (PowerUp.spawnPowerUps(rng, timeElapsedSinceLastFrame) ++ powerUps)
+      (PowerUp.spawnPowerUps(
+        rng,
+        timeElapsedSinceLastFrame,
+        totalGameTimeSeconds
+      ) ++ powerUps)
         .filterNot(soldier.doesCollect)
         .filterNot(_.isOffScreen)
         .map(_.update(timeElapsedSinceLastFrame))

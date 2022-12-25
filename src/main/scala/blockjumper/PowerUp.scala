@@ -14,8 +14,8 @@ enum PowerUpInfo(
     val firstAppear: Double,
     val rate: Double
 ):
-  // .1333 is correct value
-  case SuperJump extends PowerUpInfo("Super\nJump", "#E84023", 7.5, 1)
+  // 7.5, .1333 is correct value
+  case SuperJump extends PowerUpInfo("Super\nJump", "#E84023", 0, 1)
 
 case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
   def update(timeElapsed: Duration): PowerUp =
@@ -58,10 +58,14 @@ object PowerUp:
       currentY += lineHeight
     }
 
-  def spawnPowerUps(rng: util.Random, timeElapsed: Duration): List[PowerUp] =
+  def spawnPowerUps(
+      rng: util.Random,
+      timeElapsed: Duration,
+      totalGameTimeSeconds: Double
+  ): List[PowerUp] =
     PowerUpInfo.values.collect {
       case powerUpInfo
-          if rng
+          if totalGameTimeSeconds > powerUpInfo.firstAppear && rng
             .nextDouble() < powerUpInfo.rate * timeElapsed.toUnit(SECONDS) =>
         PowerUp(
           // valid centerX range is [radius, width - radius]
