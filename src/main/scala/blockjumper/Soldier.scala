@@ -97,9 +97,9 @@ case class Soldier(
       (1.3, 1.4),
       (1.5, 3)
     )
-    if drawWindows.exists((lower, upper) =>
-        lower < invincibilitySecondsRemaining && upper >= invincibilitySecondsRemaining
-      )
+    if drawWindows.exists { (lower, upper) =>
+      lower < invincibilitySecondsRemaining && upper >= invincibilitySecondsRemaining
+    }
     then
       context.beginPath()
       context.arc(
