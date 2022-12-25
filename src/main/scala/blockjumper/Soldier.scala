@@ -32,7 +32,7 @@ case class Soldier(
     val floor = GameState.GrassHeight - Soldier.Height
     this.copy(
       yVelocity = if y == floor then 0 else yVelocity,
-      midSuperJump = if y == floor then false else midSuperJump,
+      midSuperJump = if y == floor then false else midSuperJump
     )
 
   def applyJumps: Soldier =
