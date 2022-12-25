@@ -12,10 +12,14 @@ enum PowerUpInfo(
     val text: String,
     val color: String,
     val firstAppear: Double,
-    val rate: Double
+    val rate: Double,
+    val fontSize: Int,
+    val fontColor: String
 ):
-  // 7.5, .1333 is correct value
-  case SuperJump extends PowerUpInfo("Super\nJump", "#E84023", 0, 1)
+  // 7.5, .1333 is correct
+  case SuperJump extends PowerUpInfo("Super\nJump", "#E84023", 0, 1, 14, "#FFFFFF")
+  // 15, .0667 is correct
+  case Invincibility extends PowerUpInfo("Invincibility", "#D2FBCE", 0, 1, 10, "#000000")
 
 case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
   def update(timeElapsed: Duration): PowerUp =
@@ -28,7 +32,7 @@ case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
     context.arc(centerX, centerY, PowerUp.Radius, 0, 2 * math.Pi)
     context.fillStyle = info.color
     context.fill()
-    PowerUp.fillText(context, info.text, centerX, centerY)
+    PowerUp.fillText(context, info.text, centerX, centerY, info.fontSize, info.fontColor)
   def eclipse = Eclipse(
     centerX - PowerUp.Radius,
     centerY - PowerUp.Radius,
@@ -43,19 +47,21 @@ object PowerUp:
       context: dom.CanvasRenderingContext2D,
       text: String,
       centerX: Double,
-      centerY: Double
+      centerY: Double,
+      fontSize: Int,
+      fontColor: String
   ): Unit =
+    val fontLineHeight = fontSize - 2
     val lines = text.split("\n")
-    val lineHeight = 12
-    val apxFontHeight = lineHeight * lines.length
+    val apxFontHeight = fontLineHeight * lines.length
     // the text is drawn based on the bottom left coordinate. The logic makes
     // the center of the text in the y-axis equal centerY
-    var currentY = centerY + lineHeight - apxFontHeight / 2
-    context.fillStyle = "#FFFFFF" // white
-    context.font = "14px sans-serif";
+    var currentY = centerY + fontLineHeight - apxFontHeight / 2
+    context.fillStyle = fontColor
+    context.font = s"${fontSize}px sans-serif";
     lines.foreach { l =>
       context.fillText(l, centerX - context.measureText(l).width / 2, currentY)
-      currentY += lineHeight
+      currentY += fontLineHeight
     }
 
   def spawnPowerUps(
