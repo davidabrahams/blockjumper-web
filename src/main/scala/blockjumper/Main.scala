@@ -41,7 +41,7 @@ def animate(
         rng,
         context,
         Some(msTimestamp),
-        gameState.update(msTimestamp, timeElapsed, keyState, rng),
+        gameState.update(msTimestamp / 1000, timeElapsed, keyState, rng),
         keyState
       )
     )

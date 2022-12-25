@@ -36,7 +36,6 @@ case class Soldier(
 
   def applyJumps: Soldier =
     val startSuperJump = yVelocity <= 0 && superJumpQueued
-    println(s"Start super jump: $startSuperJump")
     val startRegularJump =
       !startSuperJump && y == Soldier.Floor && regularJumpQueued
     this.copy(
@@ -138,7 +137,7 @@ object Soldier:
   // give that we are a certain distance off the ground, how long has our
   // super jump been? This assumes we are still on the way up
   private def superJumpTimeElapsed(distanceTraveled: Double): Double =
-    // solving a quadratic equation: 
+    // solving a quadratic equation:
     // https://www.wolframalpha.com/input?i=y+%3D+v*t+-+0.5*a*t*t%2C+solve+for+t
     val v = SuperJumpVelocity
     val a = SuperJumpGravity
@@ -148,7 +147,9 @@ object Soldier:
   // given that we are a certain distance off the ground and we are mid
   // superjump, what is our velocity?
   def superJumpVelocity(distanceTraveled: Double): Double =
-    SuperJumpVelocity - SuperJumpGravity * superJumpTimeElapsed(distanceTraveled)
+    SuperJumpVelocity - SuperJumpGravity * superJumpTimeElapsed(
+      distanceTraveled
+    )
 
   def powerUpHitEdge: List[(Int, Int)] =
     val leftSide = List(
