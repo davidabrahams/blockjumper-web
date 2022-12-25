@@ -13,6 +13,7 @@ case class Soldier(
     regularJumpQueued: Boolean,
     superJumpQueued: Boolean,
     invincibilitySecondsRemaining: Double,
+    ultimateInvincibilitySecondsRemaining: Double,
     explosionSecondsRemaining: Double,
     bullets: Int,
     explosions: Int
@@ -71,6 +72,10 @@ case class Soldier(
       yVelocity = yVelocity + accel * timeElapsed.toUnit(SECONDS),
       invincibilitySecondsRemaining = Math
         .max(0, invincibilitySecondsRemaining - timeElapsed.toUnit(SECONDS)),
+      ultimateInvincibilitySecondsRemaining = Math.max(
+        0,
+        ultimateInvincibilitySecondsRemaining - timeElapsed.toUnit(SECONDS)
+      ),
       explosionSecondsRemaining =
         Math.max(0, explosionSecondsRemaining - timeElapsed.toUnit(SECONDS))
     )
@@ -82,6 +87,8 @@ case class Soldier(
       case PowerUpInfo.SuperJump => this.copy(superJumps = superJumps + 1)
       case PowerUpInfo.Invincibility =>
         this.copy(invincibilitySecondsRemaining = 3)
+      case PowerUpInfo.UltimateInvincibility =>
+        this.copy(ultimateInvincibilitySecondsRemaining = 5)
       case PowerUpInfo.Bullets =>
         this.copy(bullets = bullets + 5)
       case PowerUpInfo.Explosion =>
@@ -93,20 +100,32 @@ case class Soldier(
     }
 
   private def maybeDrawForceField(context: dom.CanvasRenderingContext2D): Unit =
-    val drawWindows: List[(Double, Double)] = List(
-      (0, 0.05),
-      (0.1, 0.15),
-      (0.2, 0.25),
-      (0.3, 0.35),
-      (0.4, 0.45),
-      (0.5, 0.6),
-      (0.7, 0.8),
-      (0.9, 1),
-      (1.1, 1.2),
-      (1.3, 1.4),
-      (1.5, 3)
+    val secondsRemaining = Math.max(
+      invincibilitySecondsRemaining,
+      ultimateInvincibilitySecondsRemaining
     )
-    if drawWindows.exists { (lower, upper) =>
+    val isUltimate = secondsRemaining == ultimateInvincibilitySecondsRemaining
+    if Soldier.forceFieldDrawWindows.exists { (lower, upper) =>
+        lower < secondsRemaining && upper >= secondsRemaining
+      }
+    then
+      context.beginPath()
+      context.arc(
+        hitPointX,
+        centerY,
+        if isUltimate then 90 else 70,
+        0,
+        2 * math.Pi
+      )
+      context.fillStyle =
+        if isUltimate then "rgba(203, 167, 246, 0.6)"
+        else "rgba(35, 246, 170, 0.6)"
+      context.fill()
+
+  private def maybeDrawUltimateForceField(
+      context: dom.CanvasRenderingContext2D
+  ): Unit =
+    if Soldier.forceFieldDrawWindows.exists { (lower, upper) =>
         lower < invincibilitySecondsRemaining && upper >= invincibilitySecondsRemaining
       }
     then
@@ -168,7 +187,7 @@ case class Soldier(
     // be <= because when the soldier sits on the ground,
     // hitPointY == block.y + block.height
     val yHit = hitPointY > block.y + 18 && hitPointY <= block.y + block.height
-    xHit && yHit && invincibilitySecondsRemaining == 0
+    xHit && yHit && invincibilitySecondsRemaining == 0 && ultimateInvincibilitySecondsRemaining == 0
 
   def doesCollect(powerUp: PowerUp): Boolean =
     Soldier.powerUpHitEdge.exists { (hitX, hitY) =>
@@ -268,3 +287,17 @@ object Soldier:
   val image =
     dom.document.createElement("img").asInstanceOf[dom.HTMLImageElement]
   image.src = "./soldier.png"
+
+  private val forceFieldDrawWindows: List[(Double, Double)] = List(
+    (0, 0.05),
+    (0.1, 0.15),
+    (0.2, 0.25),
+    (0.3, 0.35),
+    (0.4, 0.45),
+    (0.5, 0.6),
+    (0.7, 0.8),
+    (0.9, 1),
+    (1.1, 1.2),
+    (1.3, 1.4),
+    (1.5, 5)
+  )

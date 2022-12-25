@@ -22,6 +22,16 @@ enum PowerUpInfo(
   // 15, .0667 is correct
   case Invincibility
       extends PowerUpInfo("Invincibility", "#D2FBCE", 0, 1, 10, "#000000")
+  // 30, .0333 is correct
+  case UltimateInvincibility
+      extends PowerUpInfo(
+        "Ultimate\nInvincibility",
+        "#E0D0F3",
+        0,
+        1,
+        10,
+        "#000000"
+      )
   // 10, .0833 is correct
   case Bullets
       extends PowerUpInfo("+5\nBullets", "#8DA057", 0, 1, 14, "#000000")
