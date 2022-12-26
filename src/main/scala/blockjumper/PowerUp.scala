@@ -47,6 +47,8 @@ enum PowerUpInfo(
         11,
         "#000000"
       )
+  case ShrinkAllBlocks
+      extends PowerUpInfo("Shrink\nAll\nBlocks", "#000000", 0, 1, 11, "#FFFFFF")
 
 case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
   def update(timeElapsed: Duration): PowerUp =

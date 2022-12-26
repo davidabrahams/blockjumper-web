@@ -93,7 +93,7 @@ case class Soldier(
         Left(this.copy(bullets = bullets + 5))
       case PowerUpInfo.Explosion =>
         Left(this.copy(explosions = explosions + 1))
-      case PowerUpInfo.DestroyAllBlocks =>
+      case PowerUpInfo.DestroyAllBlocks | PowerUpInfo.ShrinkAllBlocks =>
         Right(powerUp.info)
 
   // return the Soldier after collecting all power ups, and the power ups the soldier captured

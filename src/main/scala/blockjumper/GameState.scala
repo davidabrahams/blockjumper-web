@@ -9,6 +9,11 @@ case class GameState(
     powerUps: List[PowerUp],
     bullets: List[Bullet]
 ):
+  private def shrinkFactor(collectedPowerUps: List[PowerUpInfo]): Int =
+    var i = 1
+    collectedPowerUps.collect { case PowerUpInfo.ShrinkAllBlocks => i *= 2 }
+    i
+
   def update(
       totalGameTimeSeconds: Double,
       timeElapsedSinceLastFrame: Duration,
@@ -29,6 +34,7 @@ case class GameState(
     val doExplode = keyState.processZClick() && soldier.explosions > 0
     val allBlocksDestroyed =
       collectedPowerUps.contains(PowerUpInfo.DestroyAllBlocks)
+    val shrinkBy = shrinkFactor(collectedPowerUps)
     GameState(
       soldier
         .copy(
@@ -47,6 +53,7 @@ case class GameState(
         .filterNot(soldier.explodedBlock)
         .filterNot(_.isOffScreen)
         .filterNot(block => bullets.exists(_.hit(block)))
+        .map(_.shrink(shrinkBy))
         .map(_.update(timeElapsedSinceLastFrame)),
       (PowerUp.spawnPowerUps(
         rng,
