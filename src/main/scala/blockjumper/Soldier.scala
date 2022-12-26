@@ -82,21 +82,28 @@ case class Soldier(
 
   private def collectPowerUp(
       powerUp: PowerUp
-  ): Soldier =
+  ): Either[Soldier, PowerUpInfo] =
     powerUp.info match
-      case PowerUpInfo.SuperJump => this.copy(superJumps = superJumps + 1)
+      case PowerUpInfo.SuperJump => Left(this.copy(superJumps = superJumps + 1))
       case PowerUpInfo.Invincibility =>
-        this.copy(invincibilitySecondsRemaining = 3)
+        Left(this.copy(invincibilitySecondsRemaining = 3))
       case PowerUpInfo.UltimateInvincibility =>
-        this.copy(ultimateInvincibilitySecondsRemaining = 5)
+        Left(this.copy(ultimateInvincibilitySecondsRemaining = 5))
       case PowerUpInfo.Bullets =>
-        this.copy(bullets = bullets + 5)
+        Left(this.copy(bullets = bullets + 5))
       case PowerUpInfo.Explosion =>
-        this.copy(explosions = explosions + 1)
+        Left(this.copy(explosions = explosions + 1))
+      case PowerUpInfo.DestroyAllBlocks =>
+        Right(powerUp.info)
 
-  def collectPowerUps(powerUps: List[PowerUp]) =
-    powerUps.foldLeft(this) { (s, p) =>
-      if doesCollect(p) then s.collectPowerUp(p) else s
+  // return the Soldier after collecting all power ups, and the power ups the soldier captured
+  // that affect the overall game state
+  def collectPowerUps(powerUps: List[PowerUp]): (Soldier, List[PowerUpInfo]) =
+    powerUps.foldLeft((this, List.empty[PowerUpInfo])) { case ((s, l), p) =>
+      if s.doesCollect(p) then
+        val collected = s.collectPowerUp(p)
+        (collected.left.getOrElse(s), collected.toOption.toList ++ l)
+      else (s, l)
     }
 
   private def maybeDrawForceField(context: dom.CanvasRenderingContext2D): Unit =
