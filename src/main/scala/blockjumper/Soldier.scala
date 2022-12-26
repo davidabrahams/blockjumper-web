@@ -31,7 +31,9 @@ case class Soldier(
         regularJumpQueued || (yVelocity >= 0 && Soldier.Floor - y < Soldier.JumpQueueDistance && keyState
           .getUpDown()),
       superJumpQueued =
-        superJumpQueued || keyState.getSpaceDown() && superJumps > 0
+        // queue a super jump if we have one available, and we're not on the way up in our current super jump
+        superJumpQueued || (keyState
+          .getSpaceDown() && superJumps > 0 && !(midSuperJump && yVelocity < 0))
     )
 
   def completeJumps: Soldier =

@@ -9,10 +9,6 @@ case class GameState(
     powerUps: List[PowerUp],
     bullets: List[Bullet]
 ):
-  private def shrinkFactor(collectedPowerUps: List[PowerUpInfo]): Int =
-    var i = 1
-    collectedPowerUps.collect { case PowerUpInfo.ShrinkAllBlocks => i *= 2 }
-    i
 
   def update(
       totalGameTimeSeconds: Double,
@@ -69,11 +65,62 @@ case class GameState(
     )
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
+    drawPowerUpCounters(context)
     Block.drawBlocks(blocks, context)
     powerUps.foreach(_.draw(context))
     Bullet.drawBullets(bullets, context)
     soldier.draw(context)
+
   def isOver: Boolean = blocks.exists(block => soldier.isHit(block))
+
+  private def drawPowerUpCounters(context: dom.CanvasRenderingContext2D): Unit =
+    val indicatorRadius = 30
+    val indicatorFontSize = 30
+    context.beginPath()
+    context.fillStyle = "rgba(0, 0, 0, 0.3)"
+    context.rect(
+      GameState.ScreenWidth - 6 * indicatorRadius - 20,
+      0,
+      6 * indicatorRadius + 20,
+      2 * indicatorRadius + 10
+    )
+    context.fill()
+    Util.drawCircleWithText(
+      context,
+      GameState.ScreenWidth - indicatorRadius - 5,
+      indicatorRadius + 5,
+      indicatorRadius,
+      PowerUpInfo.SuperJump.color,
+      soldier.superJumps.toString,
+      indicatorFontSize,
+      PowerUpInfo.SuperJump.fontColor
+    )
+    Util.drawCircleWithText(
+      context,
+      GameState.ScreenWidth - 3 * indicatorRadius - 10,
+      indicatorRadius + 5,
+      indicatorRadius,
+      PowerUpInfo.Bullets.color,
+      soldier.bullets.toString,
+      indicatorFontSize,
+      PowerUpInfo.Bullets.fontColor
+    )
+    Util.drawCircleWithText(
+      context,
+      GameState.ScreenWidth - 5 * indicatorRadius - 15,
+      indicatorRadius + 5,
+      indicatorRadius,
+      PowerUpInfo.Explosion.color,
+      soldier.explosions.toString,
+      indicatorFontSize,
+      PowerUpInfo.Explosion.fontColor
+    )
+
+  private def shrinkFactor(collectedPowerUps: List[PowerUpInfo]): Int =
+    collectedPowerUps.foldLeft(1) {
+      case (i, PowerUpInfo.ShrinkAllBlocks) => i * 2
+      case (i, _)                           => i
+    }
 
 object GameState:
   val ScreenWidth = 800

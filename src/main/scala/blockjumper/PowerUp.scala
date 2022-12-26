@@ -38,6 +38,8 @@ enum PowerUpInfo(
   // 20, .0833 is correct
   case Explosion
       extends PowerUpInfo("Explosion", "#EC8330", 0, 1, 11, "#000000")
+
+  // 27.5, .05 is correct
   case DestroyAllBlocks
       extends PowerUpInfo(
         "Destroy\nAll\nBlocks",
@@ -47,6 +49,7 @@ enum PowerUpInfo(
         11,
         "#000000"
       )
+  // 25, .05 is correct
   case ShrinkAllBlocks
       extends PowerUpInfo("Shrink\nAll\nBlocks", "#000000", 0, 1, 11, "#FFFFFF")
 
@@ -57,18 +60,17 @@ case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
     )
   def isOffScreen = centerY - PowerUp.Radius > GameState.GrassHeight
   def draw(context: dom.CanvasRenderingContext2D): Unit =
-    context.beginPath()
-    context.arc(centerX, centerY, PowerUp.Radius, 0, 2 * math.Pi)
-    context.fillStyle = info.color
-    context.fill()
-    PowerUp.fillText(
+    Util.drawCircleWithText(
       context,
-      info.text,
       centerX,
       centerY,
+      PowerUp.Radius,
+      info.color,
+      info.text,
       info.fontSize,
       info.fontColor
     )
+
   def eclipse = Eclipse(
     centerX - PowerUp.Radius,
     centerY - PowerUp.Radius,
@@ -79,26 +81,6 @@ case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
 object PowerUp:
   val Radius = 25
   val Velocity = 200 // original code had 4
-  private def fillText(
-      context: dom.CanvasRenderingContext2D,
-      text: String,
-      centerX: Double,
-      centerY: Double,
-      fontSize: Int,
-      fontColor: String
-  ): Unit =
-    val fontLineHeight = fontSize - 2
-    val lines = text.split("\n")
-    val apxFontHeight = fontLineHeight * lines.length
-    // the text is drawn based on the bottom left coordinate. The logic makes
-    // the center of the text in the y-axis equal centerY
-    var currentY = centerY + fontLineHeight - apxFontHeight / 2
-    context.fillStyle = fontColor
-    context.font = s"${fontSize}px sans-serif";
-    lines.foreach { l =>
-      context.fillText(l, centerX - context.measureText(l).width / 2, currentY)
-      currentY += fontLineHeight
-    }
 
   def spawnPowerUps(
       rng: util.Random,
