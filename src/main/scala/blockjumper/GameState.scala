@@ -7,7 +7,8 @@ case class GameState(
     soldier: Soldier,
     blocks: List[Block],
     powerUps: List[PowerUp],
-    bullets: List[Bullet]
+    bullets: List[Bullet],
+    last10FrameDuration: List[Duration]
 ):
 
   def update(
@@ -61,13 +62,20 @@ case class GameState(
         .map(_.update(timeElapsedSinceLastFrame)),
       (maybeNewBullet.toList ++ bullets)
         .filterNot(_.isOffScreen)
-        .map(_.update(timeElapsedSinceLastFrame))
+        .map(_.update(timeElapsedSinceLastFrame)),
+      (timeElapsedSinceLastFrame +: last10FrameDuration).take(10)
     )
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
     drawPowerUpCounters(context)
     Block.drawBlocks(blocks, context)
     powerUps.foreach(_.draw(context))
+    drawFPS(
+      context,
+      (last10FrameDuration.length / last10FrameDuration
+        .map(_.toUnit(SECONDS))
+        .sum).toInt
+    )
     Bullet.drawBullets(bullets, context)
     soldier.draw(context)
 
@@ -115,6 +123,12 @@ case class GameState(
       indicatorFontSize,
       PowerUpInfo.Explosion.fontColor
     )
+
+  private def drawFPS(context: dom.CanvasRenderingContext2D, fps: Int): Unit =
+    context.fillStyle = "#000000"
+    context.font = s"25px sans-serif";
+    context.fillText(s"FPS: $fps", 5, 24)
+    ()
 
   private def shrinkFactor(collectedPowerUps: List[PowerUpInfo]): Int =
     collectedPowerUps.foldLeft(1) {
