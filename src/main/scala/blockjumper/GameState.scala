@@ -35,7 +35,12 @@ case class GameState(
       collectedPowerUps.contains(PowerUpInfo.DestroyAllBlocks)
     val shrinkBy = shrinkFactor(collectedPowerUps)
     val newHitBonuses: List[HitBonus] =
-      blocks.flatMap(block => bullets.flatMap(bullet => bullet.hit(block)))
+      blocks.flatMap { block =>
+        bullets.flatMap(bullet => bullet.hit(block)) ++ soldier.explodedBlock(
+          block
+        )
+      }
+
     GameState(
       soldier
         .copy(
@@ -56,7 +61,7 @@ case class GameState(
       ) + newHitBonuses.length,
       maybeNewBlock.toList ++ blocks
         .filterNot(_ => allBlocksDestroyed)
-        .filterNot(soldier.explodedBlock)
+        .filterNot(soldier.explodedBlock(_).isDefined)
         .filterNot(_.isOffScreen)
         .filterNot(block => bullets.exists(_.hit(block).isDefined))
         .map(_.shrink(shrinkBy))
