@@ -92,7 +92,7 @@ case class Soldier(
       case PowerUpInfo.UltimateInvincibility =>
         Left(this.copy(ultimateInvincibilitySecondsRemaining = 5))
       case PowerUpInfo.Bullets =>
-        Left(this.copy(bullets = bullets + 3))
+        Left(this.copy(bullets = bullets + 5))
       case PowerUpInfo.Explosion =>
         Left(this.copy(explosions = explosions + 1))
       case PowerUpInfo.DestroyAllBlocks | PowerUpInfo.ShrinkAllBlocks |
