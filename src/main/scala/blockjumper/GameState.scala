@@ -9,10 +9,6 @@ case class GameState(
     powerUps: List[PowerUp],
     bullets: List[Bullet]
 ):
-  private def shrinkFactor(collectedPowerUps: List[PowerUpInfo]): Int =
-    var i = 1
-    collectedPowerUps.collect { case PowerUpInfo.ShrinkAllBlocks => i *= 2 }
-    i
 
   def update(
       totalGameTimeSeconds: Double,
@@ -73,7 +69,14 @@ case class GameState(
     powerUps.foreach(_.draw(context))
     Bullet.drawBullets(bullets, context)
     soldier.draw(context)
+
   def isOver: Boolean = blocks.exists(block => soldier.isHit(block))
+
+  private def shrinkFactor(collectedPowerUps: List[PowerUpInfo]): Int =
+    collectedPowerUps.foldLeft(1) {
+      case (i, PowerUpInfo.ShrinkAllBlocks) => i * 2
+      case (i, _) => i
+    }
 
 object GameState:
   val ScreenWidth = 800
