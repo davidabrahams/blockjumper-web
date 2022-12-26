@@ -47,7 +47,8 @@ object Block:
     // initial spawn rate is 0.2 = .2 * 10 / 3 = 0.667
     // every frame, increases .00006667. At 50fps, scaled to per second, increase rate is .0111 / sec
     // max spawn rate is .4*10/3 = 1.333
-    Math.min(0.5 + 1.3 * totalGameTimeElapsedSeconds / 240, 1.8)
+    if totalGameTimeElapsedSeconds < 2 then 0
+    else Math.min(0.5 + 1.3 * totalGameTimeElapsedSeconds / 240, 1.8)
   def generateRandom(rng: util.Random, spawnSide: Option[LeftOrRight]): Block =
     val width = (rng.nextDouble() * 40).toInt + 41
     val height = (rng.nextDouble() * 40).toInt + 41
