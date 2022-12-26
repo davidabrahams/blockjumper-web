@@ -9,10 +9,11 @@ case class Bullet(x: Double, y: Double):
   def update(timeElapsed: Duration): Bullet =
     this.copy(y = y + Bullet.Velocity * timeElapsed.toUnit(SECONDS))
   def isOffScreen = y > GameState.GrassHeight
-  def hit(b: Block): Boolean =
+  def hit(b: Block): Option[HitBonus] =
     val xHit = x > b.x && x < b.x + b.width
     val yHit = y < b.y + b.height && y > b.y - Bullet.Height
-    xHit && yHit
+    if xHit && yHit then Some(HitBonus(x, b.y + b.height / 2, "#00FF7F", 0.8))
+    else None
 
 object Bullet:
   val Height = 120

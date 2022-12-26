@@ -9,6 +9,7 @@ case class GameState(
     blocks: List[Block],
     powerUps: List[PowerUp],
     bullets: List[Bullet],
+    hitBonuses: List[HitBonus],
     last10FrameDuration: List[Duration]
 ):
 
@@ -33,6 +34,8 @@ case class GameState(
     val allBlocksDestroyed =
       collectedPowerUps.contains(PowerUpInfo.DestroyAllBlocks)
     val shrinkBy = shrinkFactor(collectedPowerUps)
+    val newHitBonuses: List[HitBonus] =
+      blocks.flatMap(block => bullets.flatMap(bullet => bullet.hit(block)))
     GameState(
       soldier
         .copy(
@@ -48,24 +51,29 @@ case class GameState(
         .update(timeElapsedSinceLastFrame),
       points + collectedPowerUps.count(
         _ == PowerUpInfo.Points1
-      ) + 5 * collectedPowerUps.count(_ == PowerUpInfo.Points5),
-      (maybeNewBlock.toList ++ blocks)
+      ) + 5 * collectedPowerUps.count(
+        _ == PowerUpInfo.Points5
+      ) + newHitBonuses.length,
+      maybeNewBlock.toList ++ blocks
         .filterNot(_ => allBlocksDestroyed)
         .filterNot(soldier.explodedBlock)
         .filterNot(_.isOffScreen)
-        .filterNot(block => bullets.exists(_.hit(block)))
+        .filterNot(block => bullets.exists(_.hit(block).isDefined))
         .map(_.shrink(shrinkBy))
         .map(_.update(timeElapsedSinceLastFrame)),
-      (PowerUp.spawnPowerUps(
+      PowerUp.spawnPowerUps(
         rng,
         timeElapsedSinceLastFrame,
         totalGameTimeSeconds
-      ) ++ powerUps)
+      ) ++ powerUps
         .filterNot(soldier.doesCollect)
         .filterNot(_.isOffScreen)
         .map(_.update(timeElapsedSinceLastFrame)),
-      (maybeNewBullet.toList ++ bullets)
+      maybeNewBullet.toList ++ bullets
         .filterNot(_.isOffScreen)
+        .map(_.update(timeElapsedSinceLastFrame)),
+      newHitBonuses ++ hitBonuses
+        .filterNot(_.timeRemaining == 0)
         .map(_.update(timeElapsedSinceLastFrame)),
       (timeElapsedSinceLastFrame +: last10FrameDuration).take(10)
     )
@@ -80,6 +88,7 @@ case class GameState(
         .map(_.toUnit(SECONDS))
         .sum).toInt
     )
+    hitBonuses.foreach(_.draw(context))
     Bullet.drawBullets(bullets, context)
     soldier.draw(context)
     drawCounters(context)
