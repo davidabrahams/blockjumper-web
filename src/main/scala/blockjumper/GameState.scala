@@ -94,8 +94,8 @@ case class GameState(
       GameState.ScreenWidth - 6 * indicatorRadius - 20,
       0,
       6 * indicatorRadius + 20,
-      // 15 pixels to account for the empty space. 23 * 0.75 accounts for the height of the points text
-      2 * indicatorRadius + 15 + 23 * 3 / 4
+      // 15 pixels to account for the empty space. 23 * 5 / 6 accounts for the height of the points text
+      2 * indicatorRadius + 15 + 23 * 5 / 6
     )
     context.fill()
 
@@ -106,8 +106,8 @@ case class GameState(
       context,
       s"${points} points",
       GameState.ScreenWidth - 3 * indicatorRadius - 10,
-      // the center y is 5 pixels down, and then half of the font height. the font height is 23 * 3 / 4
-      5 + 23 * 3 / 4 / 2,
+      // the center y is 5 pixels down, and then half of the font height. the font height is 23 * 5 / 6
+      5 + 23 * 5 / 6 / 2,
       23,
       "#000000"
     )
@@ -115,7 +115,7 @@ case class GameState(
       context,
       GameState.ScreenWidth - indicatorRadius - 5,
       // 10 pixels down plus the font height
-      indicatorRadius + 10 + 23 * 3 / 4,
+      indicatorRadius + 10 + 23 * 5 / 6,
       indicatorRadius,
       PowerUpInfo.SuperJump.color,
       soldier.superJumps.toString,
@@ -125,7 +125,7 @@ case class GameState(
     Util.drawCircleWithText(
       context,
       GameState.ScreenWidth - 3 * indicatorRadius - 10,
-      indicatorRadius + 10 + 23 * 3 / 4,
+      indicatorRadius + 10 + 23 * 5 / 6,
       indicatorRadius,
       PowerUpInfo.Bullets.color,
       soldier.bullets.toString,
@@ -135,7 +135,7 @@ case class GameState(
     Util.drawCircleWithText(
       context,
       GameState.ScreenWidth - 5 * indicatorRadius - 15,
-      indicatorRadius + 10 + 23 * 3 / 4,
+      indicatorRadius + 10 + 23 * 5 / 6,
       indicatorRadius,
       PowerUpInfo.Explosion.color,
       soldier.explosions.toString,
