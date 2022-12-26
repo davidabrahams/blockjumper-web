@@ -75,7 +75,7 @@ case class GameState(
   private def shrinkFactor(collectedPowerUps: List[PowerUpInfo]): Int =
     collectedPowerUps.foldLeft(1) {
       case (i, PowerUpInfo.ShrinkAllBlocks) => i * 2
-      case (i, _) => i
+      case (i, _)                           => i
     }
 
 object GameState:
