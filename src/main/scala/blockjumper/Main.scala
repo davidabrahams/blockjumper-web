@@ -27,7 +27,7 @@ def animate(
   gameState.draw(context)
   // draw the grass
   context.beginPath()
-  context.fillStyle = "#3DB91F"
+  context.fillStyle = "rgba(52, 131, 47, 1)"
   context.rect(
     0,
     GameState.GrassHeight,
