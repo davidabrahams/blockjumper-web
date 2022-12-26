@@ -19,7 +19,7 @@ enum PowerUpInfo(
   case Points1 extends PowerUpInfo("+1 Point", "#F8D0C6", 5, .3, 13, "#000000")
   // 7.5, .1333 is correct
   case SuperJump
-      extends PowerUpInfo("Super\nJump", "#E84023", 15, .11, 14, "#FFFFFF")
+      extends PowerUpInfo("Super\nJump", "#E84023", 15, .10, 14, "#FFFFFF")
   // 10, .0833 is correct
   case Bullets
       extends PowerUpInfo("+3\nBullets", "#8DA057", 25, .12, 14, "#000000")
