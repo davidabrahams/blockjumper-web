@@ -34,13 +34,10 @@ case class Block(
   def shrink(factor: Int): Block =
     if factor == 1 then this
     else
-      val newWidth = width / factor
-      val newHeight = height / factor
-      val newX = x + (width - newWidth) / 2
       this.copy(
-        x = newX,
-        width = newWidth,
-        height = newHeight,
+        x = x + (width - width / factor) / 2,
+        width = width / factor,
+        height = height / factor,
         colorOverride = Some(color),
         velocityOverride = Some(velocity)
       )
