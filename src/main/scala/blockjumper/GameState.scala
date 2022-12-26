@@ -15,6 +15,8 @@ case class GameState(
       keyState: KeyState,
       rng: util.Random
   ): GameState =
+    // shadow the soldier variable here to the version which has collected all the power ups
+    val (soldier, collectedPowerUps) = this.soldier.collectPowerUps(powerUps)
     val newBlockSpawnOdds = Block.spawnRate(
       totalGameTimeSeconds
     ) * timeElapsedSinceLastFrame.toUnit(SECONDS)
@@ -25,6 +27,8 @@ case class GameState(
     val maybeNewBullet: Option[Bullet] =
       if keyState.processXClick() then soldier.maybeSpawnBullet else None
     val doExplode = keyState.processZClick() && soldier.explosions > 0
+    val allBlocksDestroyed =
+      collectedPowerUps.contains(PowerUpInfo.DestroyAllBlocks)
     GameState(
       soldier
         .copy(
@@ -34,12 +38,12 @@ case class GameState(
           explosionSecondsRemaining =
             if doExplode then 0.4 else soldier.explosionSecondsRemaining
         )
-        .collectPowerUps(powerUps)
         .completeJumps
         .applyKeyPresses(keyState)
         .applyJumps
         .update(timeElapsedSinceLastFrame),
       (maybeNewBlock.toList ++ blocks)
+        .filterNot(_ => allBlocksDestroyed)
         .filterNot(soldier.explodedBlock)
         .filterNot(_.isOffScreen)
         .filterNot(block => bullets.exists(_.hit(block)))
