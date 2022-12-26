@@ -196,7 +196,10 @@ case class Soldier(
     // of blocks to make it feel consistent. The second check comparison has to
     // be <= because when the soldier sits on the ground,
     // hitPointY == block.y + block.height
-    val yHit = hitPointY > block.y + 18 && hitPointY <= block.y + block.height
+    val yHit = hitPointY >= block.y + Math.min(
+      18,
+      block.height
+    ) && hitPointY <= block.y + block.height
     xHit && yHit && invincibilitySecondsRemaining == 0 && ultimateInvincibilitySecondsRemaining == 0
 
   def doesCollect(powerUp: PowerUp): Boolean =
