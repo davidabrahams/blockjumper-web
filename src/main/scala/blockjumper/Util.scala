@@ -14,7 +14,7 @@ object Util:
       fontColor: String
   ): Unit =
     context.beginPath()
-    context.arc(centerX, centerY, PowerUp.Radius, 0, 2 * math.Pi)
+    context.arc(centerX, centerY, radius, 0, 2 * math.Pi)
     context.fillStyle = fillColor
     context.fill()
     fillText(
