@@ -34,7 +34,7 @@ object Util:
       fontSize: Int,
       fontColor: String
   ): Unit =
-    val fontLineHeight = 3 * fontSize / 4
+    val fontLineHeight = 5 * fontSize / 6
     val lines = text.split("\n")
     val apxFontHeight = fontLineHeight * lines.length
     // the text is drawn based on the bottom left coordinate. The logic makes

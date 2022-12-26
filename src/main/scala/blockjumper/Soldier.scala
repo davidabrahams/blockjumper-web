@@ -227,16 +227,26 @@ case class Soldier(
       Some(Bullet(hitPointX, y + Soldier.Height - Bullet.Height))
     else None
 
-  def explodedBlock(b: Block): Boolean =
-    if explosionSecondsRemaining > 0 then
-      val explosionEclipse = Eclipse(
-        hitPointX - Soldier.ExplosionRadius,
-        centerY - Soldier.ExplosionRadius,
-        2 * Soldier.ExplosionRadius,
-        2 * Soldier.ExplosionRadius
+  def explodedBlock(b: Block): Option[HitBonus] =
+    val explosionEclipse = Eclipse(
+      hitPointX - Soldier.ExplosionRadius,
+      centerY - Soldier.ExplosionRadius,
+      2 * Soldier.ExplosionRadius,
+      2 * Soldier.ExplosionRadius
+    )
+    if explosionSecondsRemaining > 0 && b.explosionHitPoints.exists {
+        (bX, bY) => explosionEclipse.contains(bX, bY)
+      }
+    then
+      Some(
+        HitBonus(
+          b.x + b.width / 2,
+          b.y + b.height / 2,
+          "rgba(229, 67, 60, 1)",
+          0.8
+        )
       )
-      b.explosionHitPoints.exists((bX, bY) => explosionEclipse.contains(bX, bY))
-    else false
+    else None
 
 object Soldier:
   // if the soldier is 100 or less pixels off the ground, pressing jump will

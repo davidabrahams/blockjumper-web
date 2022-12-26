@@ -9,6 +9,7 @@ case class GameState(
     blocks: List[Block],
     powerUps: List[PowerUp],
     bullets: List[Bullet],
+    hitBonuses: List[HitBonus],
     last10FrameDuration: List[Duration]
 ):
 
@@ -33,6 +34,13 @@ case class GameState(
     val allBlocksDestroyed =
       collectedPowerUps.contains(PowerUpInfo.DestroyAllBlocks)
     val shrinkBy = shrinkFactor(collectedPowerUps)
+    val newHitBonuses: List[HitBonus] =
+      blocks.flatMap { block =>
+        bullets.flatMap(bullet => bullet.hit(block)) ++ soldier.explodedBlock(
+          block
+        )
+      }
+
     GameState(
       soldier
         .copy(
@@ -48,24 +56,29 @@ case class GameState(
         .update(timeElapsedSinceLastFrame),
       points + collectedPowerUps.count(
         _ == PowerUpInfo.Points1
-      ) + 5 * collectedPowerUps.count(_ == PowerUpInfo.Points5),
-      (maybeNewBlock.toList ++ blocks)
+      ) + 5 * collectedPowerUps.count(
+        _ == PowerUpInfo.Points5
+      ) + newHitBonuses.length,
+      maybeNewBlock.toList ++ blocks
         .filterNot(_ => allBlocksDestroyed)
-        .filterNot(soldier.explodedBlock)
+        .filterNot(soldier.explodedBlock(_).isDefined)
         .filterNot(_.isOffScreen)
-        .filterNot(block => bullets.exists(_.hit(block)))
+        .filterNot(block => bullets.exists(_.hit(block).isDefined))
         .map(_.shrink(shrinkBy))
         .map(_.update(timeElapsedSinceLastFrame)),
-      (PowerUp.spawnPowerUps(
+      PowerUp.spawnPowerUps(
         rng,
         timeElapsedSinceLastFrame,
         totalGameTimeSeconds
-      ) ++ powerUps)
+      ) ++ powerUps
         .filterNot(soldier.doesCollect)
         .filterNot(_.isOffScreen)
         .map(_.update(timeElapsedSinceLastFrame)),
-      (maybeNewBullet.toList ++ bullets)
+      maybeNewBullet.toList ++ bullets
         .filterNot(_.isOffScreen)
+        .map(_.update(timeElapsedSinceLastFrame)),
+      newHitBonuses ++ hitBonuses
+        .filterNot(_.timeRemaining == 0)
         .map(_.update(timeElapsedSinceLastFrame)),
       (timeElapsedSinceLastFrame +: last10FrameDuration).take(10)
     )
@@ -80,6 +93,7 @@ case class GameState(
         .map(_.toUnit(SECONDS))
         .sum).toInt
     )
+    hitBonuses.foreach(_.draw(context))
     Bullet.drawBullets(bullets, context)
     soldier.draw(context)
     drawCounters(context)
@@ -94,8 +108,8 @@ case class GameState(
       GameState.ScreenWidth - 6 * indicatorRadius - 20,
       0,
       6 * indicatorRadius + 20,
-      // 15 pixels to account for the empty space. 23 * 0.75 accounts for the height of the points text
-      2 * indicatorRadius + 15 + 23 * 3 / 4
+      // 15 pixels to account for the empty space. 23 * 5 / 6 accounts for the height of the points text
+      2 * indicatorRadius + 15 + 23 * 5 / 6
     )
     context.fill()
 
@@ -106,8 +120,8 @@ case class GameState(
       context,
       s"${points} points",
       GameState.ScreenWidth - 3 * indicatorRadius - 10,
-      // the center y is 5 pixels down, and then half of the font height. the font height is 23 * 3 / 4
-      5 + 23 * 3 / 4 / 2,
+      // the center y is 5 pixels down, and then half of the font height. the font height is 23 * 5 / 6
+      5 + 23 * 5 / 6 / 2,
       23,
       "#000000"
     )
@@ -115,7 +129,7 @@ case class GameState(
       context,
       GameState.ScreenWidth - indicatorRadius - 5,
       // 10 pixels down plus the font height
-      indicatorRadius + 10 + 23 * 3 / 4,
+      indicatorRadius + 10 + 23 * 5 / 6,
       indicatorRadius,
       PowerUpInfo.SuperJump.color,
       soldier.superJumps.toString,
@@ -125,7 +139,7 @@ case class GameState(
     Util.drawCircleWithText(
       context,
       GameState.ScreenWidth - 3 * indicatorRadius - 10,
-      indicatorRadius + 10 + 23 * 3 / 4,
+      indicatorRadius + 10 + 23 * 5 / 6,
       indicatorRadius,
       PowerUpInfo.Bullets.color,
       soldier.bullets.toString,
@@ -135,7 +149,7 @@ case class GameState(
     Util.drawCircleWithText(
       context,
       GameState.ScreenWidth - 5 * indicatorRadius - 15,
-      indicatorRadius + 10 + 23 * 3 / 4,
+      indicatorRadius + 10 + 23 * 5 / 6,
       indicatorRadius,
       PowerUpInfo.Explosion.color,
       soldier.explosions.toString,
