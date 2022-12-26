@@ -16,44 +16,51 @@ enum PowerUpInfo(
     val fontSize: Int,
     val fontColor: String
 ):
+  case Points1 extends PowerUpInfo("+1 Point", "#F8D0C6", 5, .5, 13, "#000000")
   // 7.5, .1333 is correct
   case SuperJump
-      extends PowerUpInfo("Super\nJump", "#E84023", 0, 1, 14, "#FFFFFF")
-  // 15, .0667 is correct
-  case Invincibility
-      extends PowerUpInfo("Invincibility", "#D2FBCE", 0, 1, 10, "#000000")
-  // 30, .0333 is correct
-  case UltimateInvincibility
-      extends PowerUpInfo(
-        "Ultimate\nInvincibility",
-        "#CC7AF5",
-        0,
-        1,
-        10,
-        "#000000"
-      )
+      extends PowerUpInfo("Super\nJump", "#E84023", 15, .13, 14, "#FFFFFF")
   // 10, .0833 is correct
   case Bullets
-      extends PowerUpInfo("+5\nBullets", "#8DA057", 0, 1, 14, "#000000")
+      extends PowerUpInfo("+3\nBullets", "#8DA057", 25, .11, 14, "#000000")
+  case Points5
+      extends PowerUpInfo("+5 Point", "#E19999", 40, .05, 13, "#000000")
+  // 25, .05 is correct
+  case ShrinkAllBlocks
+      extends PowerUpInfo(
+        "Shrink\nAll\nBlocks",
+        "#000000",
+        45,
+        .03,
+        11,
+        "#FFFFFF"
+      )
+  // 15, .0667 is correct
+  case Invincibility
+      extends PowerUpInfo("Invincibility", "#D2FBCE", 60, .075, 10, "#000000")
   // 20, .0833 is correct
   case Explosion
-      extends PowerUpInfo("Explosion", "#EC8330", 0, 1, 11, "#000000")
-  case Points1 extends PowerUpInfo("+1 Point", "#F8D0C6", 0, 1, 13, "#000000")
-  case Points5 extends PowerUpInfo("+5 Point", "#E19999", 0, 1, 13, "#000000")
-
+      extends PowerUpInfo("Explosion", "#EC8330", 80, .09, 11, "#000000")
   // 27.5, .05 is correct
   case DestroyAllBlocks
       extends PowerUpInfo(
         "Destroy\nAll\nBlocks",
         "#FFFFFF",
-        0,
-        1,
+        100,
+        .08,
         11,
         "#000000"
       )
-  // 25, .05 is correct
-  case ShrinkAllBlocks
-      extends PowerUpInfo("Shrink\nAll\nBlocks", "#000000", 0, 1, 11, "#FFFFFF")
+  // 30, .0333 is correct
+  case UltimateInvincibility
+      extends PowerUpInfo(
+        "Ultimate\nInvincibility",
+        "#CC7AF5",
+        120,
+        .05,
+        10,
+        "#000000"
+      )
 
 case class PowerUp(centerX: Double, centerY: Double, info: PowerUpInfo):
   def update(timeElapsed: Duration): PowerUp =
