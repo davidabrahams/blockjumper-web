@@ -5,6 +5,7 @@ import scala.concurrent.duration.*
 
 case class GameState(
     soldier: Soldier,
+    points: Int,
     blocks: List[Block],
     powerUps: List[PowerUp],
     bullets: List[Bullet],
@@ -45,6 +46,9 @@ case class GameState(
         .applyKeyPresses(keyState)
         .applyJumps
         .update(timeElapsedSinceLastFrame),
+      points + collectedPowerUps.count(
+        _ == PowerUpInfo.Points1
+      ) + 5 * collectedPowerUps.count(_ == PowerUpInfo.Points5),
       (maybeNewBlock.toList ++ blocks)
         .filterNot(_ => allBlocksDestroyed)
         .filterNot(soldier.explodedBlock)
@@ -67,7 +71,7 @@ case class GameState(
     )
 
   def draw(context: dom.CanvasRenderingContext2D): Unit =
-    drawPowerUpCounters(context)
+    drawCounterWindow(context)
     Block.drawBlocks(blocks, context)
     powerUps.foreach(_.draw(context))
     drawFPS(
@@ -78,25 +82,40 @@ case class GameState(
     )
     Bullet.drawBullets(bullets, context)
     soldier.draw(context)
+    drawCounters(context)
 
   def isOver: Boolean = blocks.exists(block => soldier.isHit(block))
 
-  private def drawPowerUpCounters(context: dom.CanvasRenderingContext2D): Unit =
-    val indicatorRadius = 30
-    val indicatorFontSize = 30
+  private def drawCounterWindow(context: dom.CanvasRenderingContext2D): Unit =
+    val indicatorRadius = 15
     context.beginPath()
-    context.fillStyle = "rgba(0, 0, 0, 0.3)"
+    context.fillStyle = "rgba(0, 0, 0, 0.15)"
     context.rect(
       GameState.ScreenWidth - 6 * indicatorRadius - 20,
       0,
       6 * indicatorRadius + 20,
-      2 * indicatorRadius + 10
+      // 15 pixels to account for the empty space. 23 * 0.75 accounts for the height of the points text
+      2 * indicatorRadius + 15 + 23 * 3 / 4
     )
     context.fill()
+
+  private def drawCounters(context: dom.CanvasRenderingContext2D): Unit =
+    val indicatorRadius = 15
+    val indicatorFontSize = 15
+    Util.fillText(
+      context,
+      s"${points} points",
+      GameState.ScreenWidth - 3 * indicatorRadius - 10,
+      // the center y is 5 pixels down, and then half of the font height. the font height is 23 * 3 / 4
+      5 + 23 * 3 / 4 / 2,
+      23,
+      "#000000"
+    )
     Util.drawCircleWithText(
       context,
       GameState.ScreenWidth - indicatorRadius - 5,
-      indicatorRadius + 5,
+      // 10 pixels down plus the font height
+      indicatorRadius + 10 + 23 * 3 / 4,
       indicatorRadius,
       PowerUpInfo.SuperJump.color,
       soldier.superJumps.toString,
@@ -106,7 +125,7 @@ case class GameState(
     Util.drawCircleWithText(
       context,
       GameState.ScreenWidth - 3 * indicatorRadius - 10,
-      indicatorRadius + 5,
+      indicatorRadius + 10 + 23 * 3 / 4,
       indicatorRadius,
       PowerUpInfo.Bullets.color,
       soldier.bullets.toString,
@@ -116,7 +135,7 @@ case class GameState(
     Util.drawCircleWithText(
       context,
       GameState.ScreenWidth - 5 * indicatorRadius - 15,
-      indicatorRadius + 5,
+      indicatorRadius + 10 + 23 * 3 / 4,
       indicatorRadius,
       PowerUpInfo.Explosion.color,
       soldier.explosions.toString,

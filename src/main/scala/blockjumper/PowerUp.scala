@@ -26,7 +26,7 @@ enum PowerUpInfo(
   case UltimateInvincibility
       extends PowerUpInfo(
         "Ultimate\nInvincibility",
-        "#E0D0F3",
+        "#CC7AF5",
         0,
         1,
         10,
@@ -38,6 +38,8 @@ enum PowerUpInfo(
   // 20, .0833 is correct
   case Explosion
       extends PowerUpInfo("Explosion", "#EC8330", 0, 1, 11, "#000000")
+  case Points1 extends PowerUpInfo("+1 Point", "#F8D0C6", 0, 1, 13, "#000000")
+  case Points5 extends PowerUpInfo("+5 Point", "#E19999", 0, 1, 13, "#000000")
 
   // 27.5, .05 is correct
   case DestroyAllBlocks

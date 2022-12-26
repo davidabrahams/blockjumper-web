@@ -26,7 +26,7 @@ object Util:
       fontColor
     )
 
-  private def fillText(
+  def fillText(
       context: dom.CanvasRenderingContext2D,
       text: String,
       centerX: Double,
