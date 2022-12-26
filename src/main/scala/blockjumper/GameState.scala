@@ -69,8 +69,21 @@ case class GameState(
     powerUps.foreach(_.draw(context))
     Bullet.drawBullets(bullets, context)
     soldier.draw(context)
+    drawPowerUpCounters(context)
 
   def isOver: Boolean = blocks.exists(block => soldier.isHit(block))
+
+  private def drawPowerUpCounters(context: dom.CanvasRenderingContext2D): Unit =
+    Util.drawCircleWithText(
+      context,
+      740,
+      60,
+      50,
+      "#E84023",
+      soldier.superJumps.toString,
+      30,
+      "#FFFFFF"
+    )
 
   private def shrinkFactor(collectedPowerUps: List[PowerUpInfo]): Int =
     collectedPowerUps.foldLeft(1) {
