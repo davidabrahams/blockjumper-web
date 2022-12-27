@@ -13,7 +13,7 @@ check_equal_hashes () {
   fi
 }
 echo "Compiling Scala, fixing intentation..."
-sbt -Dscala.rewrite=indent "compile; test:compile; scalafmtAll"
+sbt -Dscala.rewrite=indent "fullLinkJS; test:compile; scalafmtAll"
 echo "Compiling Scala, fixing syntax..."
-sbt -Dscala.rewrite=new-syntax "compile; test:compile; scalafmtAll"
+sbt -Dscala.rewrite=new-syntax "fullLinkJS; test:compile; scalafmtAll"
 check_equal_hashes
