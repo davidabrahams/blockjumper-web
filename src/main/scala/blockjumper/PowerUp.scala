@@ -57,7 +57,7 @@ enum PowerUpInfo(
         "Ultimate\nInvincibility",
         "#CC7AF5",
         120,
-        .05,
+        .04,
         10,
         "#000000"
       )
