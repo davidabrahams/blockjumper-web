@@ -45,6 +45,7 @@ def animate(
         keyState
       )
     )
+  else println(s"Time elapsed: ${msTimestamp / 1000}")
 }
 
 enum LeftOrRight:
