@@ -309,7 +309,7 @@ object Soldier:
 
   val image =
     dom.document.createElement("img").asInstanceOf[dom.HTMLImageElement]
-  image.src = "./soldier.png"
+  image.src = "./blockjumper/soldier.png"
 
   private val forceFieldDrawWindows: List[(Double, Double)] = List(
     (0, 0.05),
