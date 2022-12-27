@@ -2,10 +2,10 @@
 
 set -e
 
-prev=$(tar -cf - src target/scala-3.2.1/blockjumper-opt | md5sum)
+prev=$(tar -cf - src target/scala-3.2.1/blockjumper-opt/main.js | md5sum)
 echo "Previous hash: $prev"
 check_equal_hashes () {
-  curr=$(tar -cf - src target/scala-3.2.1/blockjumper-opt | md5sum)
+  curr=$(tar -cf - src target/scala-3.2.1/blockjumper-opt/main.js | md5sum)
   echo "New hash: $curr"
   if [ "$curr" != "$prev" ]; then
     echo "Source code changed. Run bash ./scripts/scala.sh"
