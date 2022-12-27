@@ -31,7 +31,7 @@ enum PowerUpInfo(
         "Shrink\nAll\nBlocks",
         "#000000",
         45,
-        .03,
+        .025,
         11,
         "#FFFFFF"
       )
@@ -57,7 +57,7 @@ enum PowerUpInfo(
         "Ultimate\nInvincibility",
         "#CC7AF5",
         120,
-        .04,
+        .035,
         10,
         "#000000"
       )
