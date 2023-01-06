@@ -10,11 +10,11 @@ case class GameState(
     powerUps: List[PowerUp],
     bullets: List[Bullet],
     hitBonuses: List[HitBonus],
+    totalGameTime: Duration,
     last10FrameDuration: List[Duration]
 ):
 
   def update(
-      totalGameTimeSeconds: Double,
       timeElapsedSinceLastFrame: Duration,
       keyState: KeyState,
       rng: util.Random
@@ -22,7 +22,7 @@ case class GameState(
     // shadow the soldier variable here to the version which has collected all the power ups
     val (soldier, collectedPowerUps) = this.soldier.collectPowerUps(powerUps)
     val newBlockSpawnOdds = Block.spawnRate(
-      totalGameTimeSeconds
+      totalGameTime.toUnit(SECONDS)
     ) * timeElapsedSinceLastFrame.toUnit(SECONDS)
     val maybeNewBlock: Option[Block] =
       if rng.nextDouble() < newBlockSpawnOdds
@@ -69,7 +69,7 @@ case class GameState(
       PowerUp.spawnPowerUps(
         rng,
         timeElapsedSinceLastFrame,
-        totalGameTimeSeconds
+        totalGameTime.toUnit(SECONDS)
       ) ++ powerUps
         .filterNot(soldier.doesCollect)
         .filterNot(_.isOffScreen)
@@ -80,6 +80,7 @@ case class GameState(
       newHitBonuses ++ hitBonuses
         .filterNot(_.timeRemaining == 0)
         .map(_.update(timeElapsedSinceLastFrame)),
+      totalGameTime + timeElapsedSinceLastFrame,
       (timeElapsedSinceLastFrame +: last10FrameDuration).take(10)
     )
 
@@ -173,3 +174,27 @@ object GameState:
   val ScreenWidth = 800
   val ScreenHeight = 600
   val GrassHeight = 420
+  def init = GameState(
+    Soldier(
+      GameState.ScreenWidth / 2 - Soldier.HitLine,
+      0,
+      0,
+      0,
+      0,
+      false,
+      false,
+      false,
+      0,
+      0,
+      0,
+      0,
+      0
+    ),
+    0,
+    List.empty,
+    List.empty,
+    List.empty,
+    List.empty,
+    Duration.Zero,
+    List.empty
+  )

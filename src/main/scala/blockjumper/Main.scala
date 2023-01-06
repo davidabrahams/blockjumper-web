@@ -35,17 +35,24 @@ def animate(
     GameState.ScreenHeight - GameState.GrassHeight
   )
   context.fill()
-  if !gameState.isOver then
-    dom.window.requestAnimationFrame(
-      animate(
-        rng,
-        context,
-        Some(msTimestamp),
-        gameState.update(msTimestamp / 1000, timeElapsed, keyState, rng),
-        keyState
-      )
+  // process the R clicks every frame. We don't do it in the if gameSate.isOver
+  // block below because this would cause an R click to get queued if it
+  // occured while the game was ongoing
+  val pressedR = keyState.processRClick()
+  val nextGameState =
+    if gameState.isOver then
+      if pressedR then GameState.init
+      else gameState
+    else gameState.update(timeElapsed, keyState, rng)
+  dom.window.requestAnimationFrame(
+    animate(
+      rng,
+      context,
+      Some(msTimestamp),
+      nextGameState,
+      keyState
     )
-  else println(s"Time elapsed: ${msTimestamp / 1000}")
+  )
 }
 
 enum LeftOrRight:
@@ -59,6 +66,7 @@ class KeyState(
     private var rightDown: Boolean,
     private var upDown: Boolean,
     private var spaceDown: Boolean,
+    private var rClicked: Boolean,
     private var xClicked: Boolean,
     private var zClicked: Boolean
 ):
@@ -74,12 +82,17 @@ class KeyState(
     val current = zClicked
     zClicked = false
     current
+  def processRClick(): Boolean =
+    val current = rClicked
+    rClicked = false
+    current
   def processKeyEvent(e: dom.KeyboardEvent, pressedDown: Boolean): Unit =
     e.keyCode match
       case 37 => leftDown = pressedDown
       case 38 => upDown = pressedDown
       case 39 => rightDown = pressedDown
       case 32 => spaceDown = pressedDown
+      case 82 => rClicked |= pressedDown
       case 88 => xClicked |= pressedDown
       case 90 => zClicked |= pressedDown
       case x  => ()
@@ -94,7 +107,7 @@ class KeyState(
   val canvas: dom.HTMLCanvasElement = context.canvas
   canvas.width = GameState.ScreenWidth
   canvas.height = GameState.ScreenHeight
-  val keyState = KeyState(false, false, false, false, false, false)
+  val keyState = KeyState(false, false, false, false, false, false, false)
   dom.window.addEventListener("keydown", keyState.processKeyEvent(_, true))
   dom.window.addEventListener("keyup", keyState.processKeyEvent(_, false))
   dom.window.requestAnimationFrame(
@@ -102,29 +115,7 @@ class KeyState(
       rng,
       context,
       None,
-      GameState(
-        Soldier(
-          GameState.ScreenWidth / 2 - Soldier.HitLine,
-          0,
-          0,
-          0,
-          0,
-          false,
-          false,
-          false,
-          0,
-          0,
-          0,
-          0,
-          0
-        ),
-        0,
-        List.empty,
-        List.empty,
-        List.empty,
-        List.empty,
-        List.empty
-      ),
+      GameState.init,
       keyState
     )
   )
